@@ -14,6 +14,7 @@ import {
     ShoppingCart,
     Users,
     FileText,
+    BarChart3,
 } from "lucide-react"
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
     { name: "Bons de commande", href: "/bo/bons-de-commande", icon: FileText },
     // { name: "Prix & Marges", href: "/bo/prix", icon: Euro },
     { name: "Projections", href: "/bo/projections", icon: TrendingUp },
+    { name: "Statistiques", href: "/bo/statistiques", icon: BarChart3 },
     { name: "Paramètres", href: "/bo/parametres", icon: Settings },
 ]
 
