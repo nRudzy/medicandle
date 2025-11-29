@@ -5,10 +5,11 @@ import { MaterialForm } from "@/components/admin/materials/material-form"
 export default async function EditMaterialPage({
     params,
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
+    const { id } = await params
     const material = await prisma.material.findUnique({
-        where: { id: params.id },
+        where: { id },
     })
 
     if (!material) {

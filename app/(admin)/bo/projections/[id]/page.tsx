@@ -9,10 +9,11 @@ import { RevenueChart } from "@/components/admin/projections/revenue-chart"
 export default async function ScenarioDetailPage({
     params,
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
+    const { id } = await params
     const scenario = await prisma.projectionScenario.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             items: {
                 include: {

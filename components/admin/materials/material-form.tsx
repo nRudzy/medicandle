@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionState } from "react"
 import { Material, MaterialType, Unit } from "@prisma/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { createMaterial, updateMaterial } from "../actions"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 const materialTypes: { value: MaterialType; label: string }[] = [
@@ -37,12 +38,27 @@ const units: { value: Unit; label: string }[] = [
 ]
 
 export function MaterialForm({ material }: { material?: Material }) {
-    const action = material
-        ? updateMaterial.bind(null, material.id)
-        : createMaterial
+    const createAction = (prevState: { error?: string } | null, formData: FormData) =>
+        createMaterial(prevState, formData)
+    const updateAction = (prevState: { error?: string } | null, formData: FormData) =>
+        updateMaterial(material!.id, prevState, formData)
+
+    const [state, formAction, isPending] = useActionState(
+        material ? updateAction : createAction,
+        null
+    )
 
     return (
-        <form action={action}>
+        <form action={formAction}>
+            {state?.error && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <h3 className="text-sm font-medium text-red-800">Erreur</h3>
+                        <p className="text-sm text-red-700 mt-1">{state.error}</p>
+                    </div>
+                </div>
+            )}
             <Card>
                 <CardContent className="pt-6 space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -138,8 +154,8 @@ export function MaterialForm({ material }: { material?: Material }) {
                     </div>
 
                     <div className="flex gap-3 pt-4">
-                        <Button type="submit">
-                            {material ? "Enregistrer" : "Créer"}
+                        <Button type="submit" disabled={isPending}>
+                            {isPending ? "Enregistrement..." : material ? "Enregistrer" : "Créer"}
                         </Button>
                         <Button type="button" variant="outline" asChild>
                             <Link href="/bo/matieres">

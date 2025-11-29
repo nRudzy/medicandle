@@ -27,10 +27,11 @@ const unitLabels = {
 export default async function CandleDetailPage({
     params,
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
+    const { id } = await params
     const candle = await prisma.candle.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             materials: {
                 include: {

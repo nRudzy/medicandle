@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useActionState } from "react"
 import { Material, MaterialType, Unit, Positioning } from "@prisma/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createCandle } from "../actions"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 const positioningOptions: { value: Positioning; label: string }[] = [
@@ -57,6 +57,7 @@ export function CandleForm({
     materials: Material[]
     candle?: any
 }) {
+    const [state, formAction, isPending] = useActionState(createCandle, null)
     const [recipeMaterials, setRecipeMaterials] = useState<RecipeMaterial[]>(
         candle?.materials?.map((cm: any) => ({
             materialId: cm.materialId,
@@ -83,7 +84,16 @@ export function CandleForm({
     }
 
     return (
-        <form action={createCandle}>
+        <form action={formAction}>
+            {state?.error && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <h3 className="text-sm font-medium text-red-800">Erreur</h3>
+                        <p className="text-sm text-red-700 mt-1">{state.error}</p>
+                    </div>
+                </div>
+            )}
             <Tabs defaultValue="info" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="info">Informations</TabsTrigger>
@@ -338,8 +348,8 @@ export function CandleForm({
             </Tabs>
 
             <div className="flex gap-3 pt-4">
-                <Button type="submit">
-                    {candle ? "Enregistrer" : "Créer la bougie"}
+                <Button type="submit" disabled={isPending}>
+                    {isPending ? "Création en cours..." : candle ? "Enregistrer" : "Créer la bougie"}
                 </Button>
                 <Button type="button" variant="outline" asChild>
                     <Link href="/bo/bougies">
