@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Material, MaterialType, Unit } from "@prisma/client"
 import {
     Table,
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { deleteMaterial } from "../actions"
-import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const materialTypeLabels: Record<MaterialType, string> = {
     WAX: "Cire",
@@ -35,6 +36,7 @@ const unitLabels: Record<Unit, string> = {
 }
 
 export function MaterialsTable({ materials }: { materials: Material[] }) {
+    const router = useRouter()
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const handleDelete = async (id: string) => {
@@ -45,6 +47,7 @@ export function MaterialsTable({ materials }: { materials: Material[] }) {
         setDeletingId(id)
         try {
             await deleteMaterial(id)
+            router.refresh()
         } catch (error) {
             alert("Erreur lors de la suppression")
         } finally {

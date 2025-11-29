@@ -14,7 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { createCandle } from "../actions"
+import { createCandle, updateCandle } from "../actions"
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -77,25 +77,60 @@ const STEPS = [
     { id: 4, title: "Prix", description: "Prix de vente" },
 ] as const
 
+type CandleWithRelations = {
+    id: string
+    name: string
+    format: string | null
+    category: string | null
+    positioning: Positioning | null
+    shortDesc: string | null
+    longDesc: string | null
+    currentPrice: number | null
+    materials: Array<{
+        materialId: string
+        quantity: number
+        unit: Unit
+        material: {
+            id: string
+        }
+    }>
+    productionParams: {
+        prepTimeMinutes: number
+        heatingTimeMinutes: number | null
+    } | null
+}
+
 export function CandleFormStepper({
     materials,
+    candle,
 }: {
     materials: Material[]
+    candle?: CandleWithRelations
 }) {
-    const [state, formAction] = useActionState(createCandle, null)
+    const isEditMode = !!candle
+    const [state, formAction] = useActionState(
+        isEditMode 
+            ? (prevState: { error?: string } | null, formData: FormData) => updateCandle(candle.id, prevState, formData)
+            : createCandle,
+        null
+    )
     const [isPending, startTransition] = useTransition()
     const [currentStep, setCurrentStep] = useState(1)
     const [formData, setFormData] = useState<CandleFormData>({
-        name: "",
-        format: "",
-        category: "",
-        positioning: "",
-        shortDesc: "",
-        longDesc: "",
-        materials: [],
-        prepTimeMinutes: "",
-        heatingTimeMinutes: "",
-        currentPrice: "",
+        name: candle?.name || "",
+        format: candle?.format || "",
+        category: candle?.category || "",
+        positioning: candle?.positioning || "",
+        shortDesc: candle?.shortDesc || "",
+        longDesc: candle?.longDesc || "",
+        materials: candle?.materials?.map((cm) => ({
+            materialId: cm.materialId,
+            quantity: cm.quantity,
+            unit: cm.unit,
+        })) || [],
+        prepTimeMinutes: candle?.productionParams?.prepTimeMinutes || "",
+        heatingTimeMinutes: candle?.productionParams?.heatingTimeMinutes || "",
+        currentPrice: candle?.currentPrice || "",
     })
 
     const updateField = <K extends keyof CandleFormData>(
@@ -531,7 +566,10 @@ export function CandleFormStepper({
                     <div className="flex gap-3">
                         {currentStep === STEPS.length && (
                             <Button type="submit" disabled={isPending}>
-                                {isPending ? "Création en cours..." : "Créer la bougie"}
+                                {isPending 
+                                    ? (isEditMode ? "Modification en cours..." : "Création en cours...")
+                                    : (isEditMode ? "Modifier la bougie" : "Créer la bougie")
+                                }
                             </Button>
                         )}
                         <Button type="button" variant="outline" asChild>

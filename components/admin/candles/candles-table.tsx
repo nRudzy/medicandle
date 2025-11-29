@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Candle, Positioning } from "@prisma/client"
 import {
     Table,
@@ -10,9 +11,11 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Edit, Eye } from "lucide-react"
+import { Edit, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { deleteCandle } from "../actions"
+import { useRouter } from "next/navigation"
 
 type CandleWithCosts = Candle & {
     materialCost: number
@@ -27,7 +30,25 @@ const positioningLabels: Record<Positioning, string> = {
 }
 
 export function CandlesTable({ candles }: { candles: CandleWithCosts[] }) {
+    const router = useRouter()
+    const [deletingId, setDeletingId] = useState<string | null>(null)
     const formatEuro = (amount: number) => `${amount.toFixed(2)} €`
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer cette bougie ?")) {
+            return
+        }
+
+        setDeletingId(id)
+        try {
+            await deleteCandle(id)
+            router.refresh()
+        } catch (error) {
+            alert("Erreur lors de la suppression")
+        } finally {
+            setDeletingId(null)
+        }
+    }
 
     return (
         <div className="rounded-md border bg-white">
@@ -117,6 +138,14 @@ export function CandlesTable({ candles }: { candles: CandleWithCosts[] }) {
                                                 <Link href={`/bo/bougies/${candle.id}/modifier`}>
                                                     <Edit className="h-4 w-4" />
                                                 </Link>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDelete(candle.id)}
+                                                disabled={deletingId === candle.id}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </TableCell>
