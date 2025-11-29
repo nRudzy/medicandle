@@ -321,7 +321,7 @@ export default async function BackOfficePage() {
                             Commandes en attente
                         </p>
                         <Link
-                            href="/bo/commandes?statut=EN_ATTENTE_STOCK"
+                            href="/bo/bons-de-commande"
                             className="text-xs text-[var(--medicandle-sage)] hover:underline mt-2 inline-block"
                         >
                             Voir les commandes →
@@ -421,7 +421,7 @@ export default async function BackOfficePage() {
                                     <span className="font-medium">{material.name}</span>
                                     {" — "}
                                     <span className="text-amber-700">
-                                        Stock: {material.stockPhysique || material.currentStock || 0} {material.unit.toLowerCase()}
+                                        Stock: {material.stockPhysique || 0} {material.unit.toLowerCase()}
                                         {material.stockMinimal && ` (min: ${material.stockMinimal})`}
                                     </span>
                                 </li>

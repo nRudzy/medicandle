@@ -117,6 +117,7 @@ export default async function CommandeDetailPage({
                                         <CommandeStatutSelector
                                             commandeId={commande.id}
                                             currentStatut={commande.statut}
+                                            isFeasible={feasibility.isFeasible}
                                         />
                                     </div>
                                 </div>

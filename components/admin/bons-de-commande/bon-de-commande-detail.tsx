@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { BonDeCommandeStatutSelector } from "./bon-de-commande-statut-selector"
 
 type BonDeCommandeMatieresWithLignes = BonDeCommandeMatieres & {
     lignes: Array<{
@@ -64,12 +65,13 @@ export function BonDeCommandeDetail({
                             </p>
                             <p className="text-sm">{formatDate(bon.dateCreation)}</p>
                         </div>
-                        {bon.statut && (
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Statut</p>
-                                <Badge>{bon.statut}</Badge>
-                            </div>
-                        )}
+                        <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">Statut</p>
+                            <BonDeCommandeStatutSelector
+                                bonId={bon.id}
+                                currentStatut={bon.statut}
+                            />
+                        </div>
                     </div>
 
                     {bon.description && (

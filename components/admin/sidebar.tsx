@@ -43,8 +43,8 @@ export function Sidebar() {
                         className="object-contain"
                         priority
                     />
+                    <h1 className="text-xl tracking-wide font-light">Medicandle</h1>
                 </Link>
-                <h1 className="text-xl font-light tracking-wide font-bold">Medicandle</h1>
             </div>
 
             <nav className="flex-1 px-3 space-y-1">

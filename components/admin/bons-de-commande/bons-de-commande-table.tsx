@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { BonDeCommandeStatutSelector } from "./bon-de-commande-statut-selector"
 
 const statutLabels: Record<BonDeCommandeMatieresStatut, string> = {
     BROUILLON: "Brouillon",
@@ -63,13 +64,10 @@ export function BonsDeCommandeTable({
                                 <TableCell>{formatDate(bon.dateCreation)}</TableCell>
                                 <TableCell>{bon.description || "—"}</TableCell>
                                 <TableCell>
-                                    {bon.statut ? (
-                                        <Badge className={statutColors[bon.statut]}>
-                                            {statutLabels[bon.statut]}
-                                        </Badge>
-                                    ) : (
-                                        "—"
-                                    )}
+                                    <BonDeCommandeStatutSelector
+                                        bonId={bon.id}
+                                        currentStatut={bon.statut}
+                                    />
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <Button variant="ghost" size="icon" asChild>

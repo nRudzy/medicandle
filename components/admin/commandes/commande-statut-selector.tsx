@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select"
 import { changeCommandeStatut } from "../actions"
 import { useTransition } from "react"
+import { useRouter } from "next/navigation"
 
 const statutLabels: Record<CommandeStatut, string> = {
     BROUILLON: "Brouillon",
@@ -24,31 +25,45 @@ const statutLabels: Record<CommandeStatut, string> = {
 export function CommandeStatutSelector({
     commandeId,
     currentStatut,
+    isFeasible,
 }: {
     commandeId: string
     currentStatut: CommandeStatut
+    isFeasible?: boolean | null
 }) {
     const [isPending, startTransition] = useTransition()
+    const router = useRouter()
 
     const handleChange = (value: string) => {
         startTransition(async () => {
             await changeCommandeStatut(commandeId, value as CommandeStatut)
+            router.refresh()
         })
     }
 
+    // Disable if commande is not feasible (unless it's already ANNULEE or LIVREE)
+    const isDisabled = isPending || (isFeasible === false && currentStatut !== CommandeStatut.ANNULEE && currentStatut !== CommandeStatut.LIVREE)
+
     return (
-        <Select value={currentStatut} onValueChange={handleChange} disabled={isPending}>
-            <SelectTrigger className="w-[250px]">
-                <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-                {Object.entries(statutLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                        {label}
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
+        <div className="space-y-1">
+            <Select value={currentStatut} onValueChange={handleChange} disabled={isDisabled}>
+                <SelectTrigger className="w-[250px]">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {Object.entries(statutLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                            {label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            {isFeasible === false && currentStatut !== CommandeStatut.ANNULEE && currentStatut !== CommandeStatut.LIVREE && (
+                <p className="text-xs text-muted-foreground">
+                    Statut verrouillé : commande non réalisable
+                </p>
+            )}
+        </div>
     )
 }
 

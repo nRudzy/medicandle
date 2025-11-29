@@ -16,22 +16,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createCommande, updateCommande } from "../actions"
 import { ArrowLeft, AlertCircle, Plus } from "lucide-react"
 import Link from "next/link"
-import { Commande, Client } from "@prisma/client"
+import { CommandeStatutSelector } from "./commande-statut-selector"
+
+// Types - using any to avoid Prisma type issues
+type CommandeType = any
+type ClientType = any
 
 export function CommandeForm({
     commande,
     clients,
+    isFeasible,
 }: {
-    commande?: Commande
-    clients: Client[]
+    commande?: CommandeType
+    clients: ClientType[]
+    isFeasible?: boolean | null
 }) {
     const isEditMode = !!commande
     const [clientId, setClientId] = useState(commande?.clientId || "none")
+    
+    // Use separate actions based on mode
     const [state, formAction] = useActionState(
-        isEditMode
-            ? (prevState: { error?: string } | null, formData: FormData) =>
+        isEditMode && commande
+            ? (prevState: any, formData: FormData) =>
                   updateCommande(commande.id, prevState, formData)
-            : createCommande,
+            : (prevState: any, formData: FormData) => createCommande(prevState, formData),
         null
     )
 
@@ -86,6 +94,17 @@ export function CommandeForm({
                             </Button>
                         </div>
                     </div>
+
+                    {isEditMode && commande && (
+                        <div className="space-y-2">
+                            <Label>Statut</Label>
+                            <CommandeStatutSelector
+                                commandeId={commande.id}
+                                currentStatut={commande.statut}
+                                isFeasible={isFeasible}
+                            />
+                        </div>
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">

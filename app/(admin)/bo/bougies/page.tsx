@@ -1,14 +1,33 @@
 import { prisma } from "@/lib/prisma"
 import { CandlesTable } from "@/components/admin/candles/candles-table"
+import { CandlesFilters } from "@/components/admin/candles/candles-filters"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { calculateTotalMaterialCost } from "@/lib/business/materials"
 import { calculateProductionCost } from "@/lib/business/production"
+import { Positioning } from "@prisma/client"
 
-export default async function CandlesPage() {
+export default async function CandlesPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ nom?: string; category?: string; positioning?: string }>
+}) {
+    const params = await searchParams
+    const where: any = { active: true }
+    
+    if (params.nom) {
+        where.name = { contains: params.nom, mode: "insensitive" }
+    }
+    if (params.category) {
+        where.category = { contains: params.category, mode: "insensitive" }
+    }
+    if (params.positioning) {
+        where.positioning = params.positioning as Positioning
+    }
+
     const candles = await prisma.candle.findMany({
-        where: { active: true },
+        where,
         include: {
             materials: {
                 include: {
@@ -86,6 +105,7 @@ export default async function CandlesPage() {
                 </Button>
             </div>
 
+            <CandlesFilters />
             <CandlesTable candles={candlesWithCosts} />
         </div>
     )

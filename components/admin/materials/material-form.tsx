@@ -131,14 +131,14 @@ export function MaterialForm({ material }: { material?: Material }) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="currentStock">Stock actuel</Label>
+                            <Label htmlFor="stockPhysique">Stock physique</Label>
                             <Input
-                                id="currentStock"
-                                name="currentStock"
+                                id="stockPhysique"
+                                name="stockPhysique"
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                defaultValue={material?.currentStock || ""}
+                                defaultValue={material?.stockPhysique || ""}
                             />
                         </div>
                     </div>

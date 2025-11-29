@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Eye, Edit } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { CommandeStatutSelector } from "./commande-statut-selector"
+import { CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 
 type CommandeWithClient = Commande & {
     client: {
@@ -20,9 +22,9 @@ type CommandeWithClient = Commande & {
         prenom?: string | null
         raisonSociale?: string | null
     } | null
-    _count: {
-        lignes: number
-    }
+    lignes: {
+        quantite: number
+    }[]
 }
 
 const statutLabels: Record<CommandeStatut, string> = {
@@ -45,7 +47,13 @@ const statutColors: Record<CommandeStatut, string> = {
     ANNULEE: "bg-red-100 text-red-800",
 }
 
-export function CommandesTable({ commandes }: { commandes: CommandeWithClient[] }) {
+export function CommandesTable({ 
+    commandes,
+    feasibilityMap,
+}: { 
+    commandes: CommandeWithClient[]
+    feasibilityMap?: Map<string, boolean | null>
+}) {
     const formatEuro = (amount: number | null) => {
         if (amount === null) return "—"
         return `${amount.toFixed(2)} €`
@@ -72,6 +80,7 @@ export function CommandesTable({ commandes }: { commandes: CommandeWithClient[] 
                         <TableHead className="text-[var(--medicandle-dark-brown)]">Client</TableHead>
                         <TableHead className="text-[var(--medicandle-dark-brown)]">Date commande</TableHead>
                         <TableHead className="text-[var(--medicandle-dark-brown)]">Statut</TableHead>
+                        <TableHead className="text-center text-[var(--medicandle-dark-brown)]">Faisabilité</TableHead>
                         <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Nb bougies</TableHead>
                         <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Montant estimé</TableHead>
                         <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Actions</TableHead>
@@ -80,43 +89,66 @@ export function CommandesTable({ commandes }: { commandes: CommandeWithClient[] 
                 <TableBody>
                     {commandes.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                                 Aucune commande enregistrée
                             </TableCell>
                         </TableRow>
                     ) : (
-                        commandes.map((commande) => (
-                            <TableRow key={commande.id} className="hover:bg-[var(--medicandle-beige)]/30">
-                                <TableCell className="font-medium">{commande.reference}</TableCell>
-                                <TableCell>{getClientName(commande)}</TableCell>
-                                <TableCell>{formatDate(commande.dateCommande)}</TableCell>
-                                <TableCell>
-                                    <Badge className={statutColors[commande.statut]}>
-                                        {statutLabels[commande.statut]}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {commande._count.lignes}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {formatEuro(commande.montantTotalEstime)}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <Button variant="ghost" size="icon" asChild>
-                                            <Link href={`/bo/commandes/${commande.id}`}>
-                                                <Eye className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button variant="ghost" size="icon" asChild>
-                                            <Link href={`/bo/commandes/${commande.id}/modifier`}>
-                                                <Edit className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        commandes.map((commande) => {
+                            const isFeasible = feasibilityMap?.get(commande.id)
+                            return (
+                                <TableRow key={commande.id} className="hover:bg-[var(--medicandle-beige)]/30">
+                                    <TableCell className="font-medium">{commande.reference}</TableCell>
+                                    <TableCell>{getClientName(commande)}</TableCell>
+                                    <TableCell>{formatDate(commande.dateCommande)}</TableCell>
+                                    <TableCell>
+                                        <CommandeStatutSelector
+                                            commandeId={commande.id}
+                                            currentStatut={commande.statut}
+                                            isFeasible={isFeasible}
+                                        />
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {isFeasible === true ? (
+                                            <div className="flex items-center justify-center gap-1 text-green-600" title="Commande réalisable">
+                                                <CheckCircle2 className="h-5 w-5" />
+                                                <span className="text-xs font-medium">Réalisable</span>
+                                            </div>
+                                        ) : isFeasible === false ? (
+                                            <div className="flex items-center justify-center gap-1 text-red-600" title="Commande non réalisable - stock insuffisant">
+                                                <XCircle className="h-5 w-5" />
+                                                <span className="text-xs font-medium">Non réalisable</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-center gap-1 text-gray-400" title="Faisabilité non déterminée">
+                                                <AlertCircle className="h-5 w-5" />
+                                                <span className="text-xs">—</span>
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {commande.lignes.reduce((sum, ligne) => sum + ligne.quantite, 0)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {formatEuro(commande.montantTotalEstime)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button variant="ghost" size="icon" asChild>
+                                                <Link href={`/bo/commandes/${commande.id}`}>
+                                                    <Eye className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                            <Button variant="ghost" size="icon" asChild>
+                                                <Link href={`/bo/commandes/${commande.id}/modifier`}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })
                     )}
                 </TableBody>
             </Table>

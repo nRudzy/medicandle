@@ -86,7 +86,6 @@ model Material {
                                // User said: "quantiteParUnite (optionnel si nécessaire) ex : 1000 pour 1 kg = 1000 g."
                                // Let's keep it optional.
   supplier        String?
-  currentStock    Float?       // Legacy field, kept for backward compatibility
   stockPhysique   Float?       // Physical stock quantity
   stockReserve    Float        @default(0) // Reserved stock for orders
   stockMinimal    Float?       // Minimum stock threshold

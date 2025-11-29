@@ -13,6 +13,11 @@ import {
     calculateMaterialsNeededForCommande,
 } from "@/lib/business/commandes"
 
+// Helper to check if error is a redirect (should not be caught)
+function isRedirectError(error: any): boolean {
+    return error?.digest?.startsWith('NEXT_REDIRECT') || error?.message === 'NEXT_REDIRECT'
+}
+
 export async function createMaterial(
     prevState: { error?: string } | null,
     formData: FormData
@@ -23,7 +28,7 @@ export async function createMaterial(
         const costPerUnit = parseFloat(formData.get("costPerUnit") as string)
         const unit = formData.get("unit") as Unit
         const supplier = formData.get("supplier") as string
-        const currentStock = formData.get("currentStock") as string
+        const stockPhysique = formData.get("stockPhysique") as string
         const notes = formData.get("notes") as string
 
         if (!name || !name.trim()) {
@@ -41,7 +46,7 @@ export async function createMaterial(
                 costPerUnit,
                 unit,
                 supplier: supplier || null,
-                currentStock: currentStock ? parseFloat(currentStock) : null,
+                stockPhysique: stockPhysique ? parseFloat(stockPhysique) : null,
                 notes: notes || null,
             },
         })
@@ -49,6 +54,10 @@ export async function createMaterial(
         revalidatePath("/bo/matieres")
         redirect("/bo/matieres")
     } catch (error: any) {
+        // Don't catch redirect errors
+        if (isRedirectError(error)) {
+            throw error
+        }
         console.error("Error creating material:", error)
         return {
             error: error?.message || "Une erreur s'est produite lors de la création de la matière. Veuillez réessayer.",
@@ -67,7 +76,7 @@ export async function updateMaterial(
         const costPerUnit = parseFloat(formData.get("costPerUnit") as string)
         const unit = formData.get("unit") as Unit
         const supplier = formData.get("supplier") as string
-        const currentStock = formData.get("currentStock") as string
+        const stockPhysique = formData.get("stockPhysique") as string
         const notes = formData.get("notes") as string
 
         if (!name || !name.trim()) {
@@ -86,7 +95,7 @@ export async function updateMaterial(
                 costPerUnit,
                 unit,
                 supplier: supplier || null,
-                currentStock: currentStock ? parseFloat(currentStock) : null,
+                stockPhysique: stockPhysique ? parseFloat(stockPhysique) : null,
                 notes: notes || null,
             },
         })
@@ -94,6 +103,10 @@ export async function updateMaterial(
         revalidatePath("/bo/matieres")
         redirect("/bo/matieres")
     } catch (error: any) {
+        // Don't catch redirect errors
+        if (isRedirectError(error)) {
+            throw error
+        }
         console.error("Error updating material:", error)
         return {
             error: error?.message || "Une erreur s'est produite lors de la mise à jour de la matière. Veuillez réessayer.",
@@ -229,6 +242,10 @@ export async function createCandle(
     revalidatePath("/bo/bougies")
     redirect("/bo/bougies")
   } catch (error: any) {
+    // Don't catch redirect errors
+    if (isRedirectError(error)) {
+      throw error
+    }
     console.error("Error creating candle:", error)
     return {
       error: error?.message || "Une erreur s'est produite lors de la création de la bougie. Veuillez réessayer.",
@@ -331,6 +348,10 @@ export async function updateCandle(
     revalidatePath(`/bo/bougies/${id}`)
     redirect(`/bo/bougies/${id}`)
   } catch (error: any) {
+    // Don't catch redirect errors
+    if (isRedirectError(error)) {
+      throw error
+    }
     console.error("Error updating candle:", error)
     return {
       error: error?.message || "Une erreur s'est produite lors de la mise à jour de la bougie. Veuillez réessayer.",
@@ -435,6 +456,10 @@ export async function createClient(
         revalidatePath("/bo/clients")
         redirect("/bo/clients")
     } catch (error: any) {
+        // Don't catch redirect errors
+        if (isRedirectError(error)) {
+            throw error
+        }
         console.error("Error creating client:", error)
         return {
             error: error?.message || "Une erreur s'est produite lors de la création du client. Veuillez réessayer.",
@@ -486,6 +511,10 @@ export async function updateClient(
         revalidatePath("/bo/clients")
         redirect("/bo/clients")
     } catch (error: any) {
+        // Don't catch redirect errors
+        if (isRedirectError(error)) {
+            throw error
+        }
         console.error("Error updating client:", error)
         return {
             error: error?.message || "Une erreur s'est produite lors de la mise à jour du client. Veuillez réessayer.",
@@ -600,6 +629,10 @@ export async function createCommande(
         revalidatePath("/bo/commandes")
         redirect(`/bo/commandes/${commande.id}`)
     } catch (error: any) {
+        // Don't catch redirect errors
+        if (isRedirectError(error)) {
+            throw error
+        }
         console.error("Error creating commande:", error)
         return {
             error: error?.message || "Une erreur s'est produite lors de la création de la commande. Veuillez réessayer.",
@@ -847,9 +880,16 @@ export async function changeCommandeStatut(
             }
         } else if (nouveauStatut === CommandeStatut.TERMINEE) {
             // Consume stock when production is finished
-            if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
+            // If stock wasn't reserved yet (e.g., from BROUILLON directly to TERMINEE), reserve it first
+            if (ancienStatut === CommandeStatut.BROUILLON || ancienStatut === CommandeStatut.EN_ATTENTE_STOCK) {
+                // Reserve first, then consume
+                await reserveStockForCommande(commandeId)
+                await consumeStockForCommande(commandeId)
+            } else if (ancienStatut === CommandeStatut.EN_COURS_COMMANDE || ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
+                // Stock is already reserved, just consume it
                 await consumeStockForCommande(commandeId)
             }
+            // Note: If coming from LIVREE or ANNULEE, we don't consume (shouldn't happen in normal workflow)
         }
 
         await prisma.commande.update({
@@ -982,6 +1022,82 @@ export async function updateBonDeCommandeMatieres(
         console.error("Error updating bon de commande matières:", error)
         return {
             error: error?.message || "Une erreur s'est produite lors de la mise à jour du bon de commande. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function changeBonDeCommandeStatut(
+    bonId: string,
+    nouveauStatut: BonDeCommandeMatieresStatut
+): Promise<{ error?: string } | void> {
+    try {
+        // Get the current bon de commande with its lignes to check previous status
+        const bonActuel = await prisma.bonDeCommandeMatieres.findUnique({
+            where: { id: bonId },
+            include: {
+                lignes: {
+                    include: {
+                        matierePremiere: {
+                            select: {
+                                id: true,
+                                stockPhysique: true,
+                                unit: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        if (!bonActuel) {
+            return { error: "Bon de commande non trouvé" }
+        }
+
+        const ancienStatut = bonActuel.statut
+
+        // Update the statut
+        await prisma.bonDeCommandeMatieres.update({
+            where: { id: bonId },
+            data: {
+                statut: nouveauStatut,
+            },
+        })
+
+        // If moving to RECU_TOTAL, increment stock for all materials
+        if (nouveauStatut === BonDeCommandeMatieresStatut.RECU_TOTAL && ancienStatut !== BonDeCommandeMatieresStatut.RECU_TOTAL) {
+            // Increment stock for each ligne
+            for (const ligne of bonActuel.lignes) {
+                const currentStock = ligne.matierePremiere.stockPhysique || 0
+                await prisma.material.update({
+                    where: { id: ligne.matierePremiere.id },
+                    data: {
+                        stockPhysique: currentStock + ligne.quantiteACommander,
+                    },
+                })
+            }
+        }
+        // If moving away from RECU_TOTAL (reverting), decrement stock
+        else if (ancienStatut === BonDeCommandeMatieresStatut.RECU_TOTAL && nouveauStatut !== BonDeCommandeMatieresStatut.RECU_TOTAL) {
+            // Decrement stock for each ligne
+            for (const ligne of bonActuel.lignes) {
+                const currentStock = ligne.matierePremiere.stockPhysique || 0
+                const newStock = Math.max(0, currentStock - ligne.quantiteACommander)
+                await prisma.material.update({
+                    where: { id: ligne.matierePremiere.id },
+                    data: {
+                        stockPhysique: newStock,
+                    },
+                })
+            }
+        }
+
+        revalidatePath("/bo/bons-de-commande")
+        revalidatePath(`/bo/bons-de-commande/${bonId}`)
+        revalidatePath("/bo/matieres") // Also revalidate materials page to show updated stock
+    } catch (error: any) {
+        console.error("Error changing bon de commande statut:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors du changement de statut. Veuillez réessayer.",
         }
     }
 }

@@ -186,7 +186,7 @@ Pour visualiser et éditer la base graphiquement :
 make prisma-studio
 ```
 
-Ouvre automatiquement sur **http://localhost:5555**
+Ouvre automatiquement sur **http://localhost:51212**
 
 ## 🚢 Déploiement
 
