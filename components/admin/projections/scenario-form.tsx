@@ -121,7 +121,7 @@ export function ScenarioForm({ candles }: { candles: Candle[] }) {
                                         onValueChange={(value) => updateCandle(index, "candleId", value)}
                                         required
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Sélectionner" />
                                         </SelectTrigger>
                                         <SelectContent>

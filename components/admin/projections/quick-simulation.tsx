@@ -42,7 +42,7 @@ export function QuickSimulation({ candles }: { candles: Candle[] }) {
                     <div className="space-y-2">
                         <Label>Bougie</Label>
                         <Select value={selectedCandleId} onValueChange={setSelectedCandleId}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Sélectionner" />
                             </SelectTrigger>
                             <SelectContent>

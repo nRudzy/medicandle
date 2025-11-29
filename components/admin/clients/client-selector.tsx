@@ -25,7 +25,7 @@ export function ClientSelector({
     return (
         <div className="flex gap-2">
             <Select value={value || "none"} onValueChange={onValueChange}>
-                <SelectTrigger className="flex-1">
+                <SelectTrigger className="w-full">
                     <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent>

@@ -54,7 +54,7 @@ export function ClientForm({ client }: { client?: Client }) {
                         <div className="space-y-2">
                             <Label htmlFor="typeClient">Type de client</Label>
                             <Select name="typeClient" defaultValue={client?.typeClient || "none"}>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Sélectionner un type" />
                                 </SelectTrigger>
                                 <SelectContent>

@@ -105,7 +105,7 @@ export function CandlesFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="positioning">Positionnement</Label>
                         <Select value={positioning} onValueChange={setPositioning} disabled={isPending}>
-                            <SelectTrigger id="positioning">
+                            <SelectTrigger id="positioning" className="w-full">
                                 <SelectValue placeholder="Tous les positionnements" />
                             </SelectTrigger>
                             <SelectContent>

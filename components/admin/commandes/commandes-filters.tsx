@@ -123,7 +123,7 @@ export function CommandesFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="faisable">Faisabilité</Label>
                         <Select value={faisable} onValueChange={setFaisable} disabled={isPending}>
-                            <SelectTrigger id="faisable">
+                            <SelectTrigger id="faisable" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

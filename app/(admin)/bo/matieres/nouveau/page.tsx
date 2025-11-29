@@ -1,13 +1,23 @@
 import { MaterialForm } from "@/components/admin/materials/material-form"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
 
 export default function NewMaterialPage() {
     return (
         <div className="max-w-2xl space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Nouvelle matière première</h1>
-                <p className="text-muted-foreground mt-1">
-                    Ajoutez une nouvelle matière première à votre inventaire
-                </p>
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" asChild>
+                    <Link href="/bo/matieres">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Nouvelle matière première</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Ajoutez une nouvelle matière première à votre inventaire
+                    </p>
+                </div>
             </div>
 
             <MaterialForm />

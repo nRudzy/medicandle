@@ -42,7 +42,7 @@ export function BonDeCommandeStatutSelector({
             onValueChange={handleChange}
             disabled={isPending}
         >
-            <SelectTrigger className="w-full max-w-[200px]">
+            <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sélectionner un statut" />
             </SelectTrigger>
             <SelectContent>

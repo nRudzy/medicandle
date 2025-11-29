@@ -47,7 +47,7 @@ export function CommandeStatutSelector({
     return (
         <div className="space-y-1">
             <Select value={currentStatut} onValueChange={handleChange} disabled={isDisabled}>
-                <SelectTrigger className="w-[250px]">
+                <SelectTrigger className="w-full">
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -58,11 +58,6 @@ export function CommandeStatutSelector({
                     ))}
                 </SelectContent>
             </Select>
-            {isFeasible === false && currentStatut !== CommandeStatut.ANNULEE && currentStatut !== CommandeStatut.LIVREE && (
-                <p className="text-xs text-muted-foreground">
-                    Statut verrouillé : commande non réalisable
-                </p>
-            )}
         </div>
     )
 }

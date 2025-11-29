@@ -308,7 +308,7 @@ export function CandleFormStepper({
                             <div
                                 className={cn(
                                     "h-0.5 flex-1 mx-2",
-                                    currentStep > step.id ? "bg-green-500" : "bg-muted"
+                                    currentStep > step.id ? "bg-green-500" : "bg-muted-foreground"
                                 )}
                             />
                         )}
@@ -364,7 +364,7 @@ export function CandleFormStepper({
                                                 updateField("positioning", value as Positioning)
                                             }
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Sélectionner" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -410,7 +410,7 @@ export function CandleFormStepper({
                                                     updateMaterial(index, "materialId", value)
                                                 }
                                             >
-                                                <SelectTrigger>
+                                                <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="Sélectionner" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -446,7 +446,7 @@ export function CandleFormStepper({
                                                     updateMaterial(index, "unit", value as Unit)
                                                 }
                                             >
-                                                <SelectTrigger>
+                                                <SelectTrigger className="w-full">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>

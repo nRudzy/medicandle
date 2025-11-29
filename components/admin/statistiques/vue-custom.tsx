@@ -143,7 +143,7 @@ export function VueCustom({ filters }: VueCustomProps) {
                     <div className="space-y-2">
                         <Label htmlFor="dimension">Dimension</Label>
                         <Select value={dimension} onValueChange={(v) => setDimension(v as Dimension)}>
-                            <SelectTrigger id="dimension">
+                            <SelectTrigger id="dimension" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -161,7 +161,7 @@ export function VueCustom({ filters }: VueCustomProps) {
                             value={indicateur}
                             onValueChange={(v) => setIndicateur(v as Indicateur)}
                         >
-                            <SelectTrigger id="indicateur">
+                            <SelectTrigger id="indicateur" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

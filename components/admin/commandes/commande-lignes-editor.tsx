@@ -150,7 +150,7 @@ export function CommandeLignesEditor({
                                             setNewLigne({ ...newLigne, bougieId: value })
                                         }
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Sélectionner une bougie" />
                                         </SelectTrigger>
                                         <SelectContent>

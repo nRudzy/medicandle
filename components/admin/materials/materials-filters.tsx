@@ -97,7 +97,7 @@ export function MaterialsFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="type">Type</Label>
                         <Select value={type} onValueChange={setType} disabled={isPending}>
-                            <SelectTrigger id="type">
+                            <SelectTrigger id="type" className="w-full">
                                 <SelectValue placeholder="Tous les types" />
                             </SelectTrigger>
                             <SelectContent>

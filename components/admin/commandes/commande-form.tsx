@@ -72,7 +72,7 @@ export function CommandeForm({
                         <Label htmlFor="clientId">Client</Label>
                         <div className="flex gap-2">
                             <Select value={clientId} onValueChange={setClientId}>
-                                <SelectTrigger className="flex-1">
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Sélectionner un client" />
                                 </SelectTrigger>
                                 <SelectContent>

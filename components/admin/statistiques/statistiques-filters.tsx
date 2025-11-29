@@ -117,7 +117,7 @@ export function StatistiquesFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="periode">Période</Label>
                         <Select value={periode} onValueChange={setPeriode} disabled={isPending}>
-                            <SelectTrigger id="periode">
+                            <SelectTrigger id="periode" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -158,7 +158,7 @@ export function StatistiquesFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="timeUnit">Unité temporelle</Label>
                         <Select value={timeUnit} onValueChange={setTimeUnit} disabled={isPending}>
-                            <SelectTrigger id="timeUnit">
+                            <SelectTrigger id="timeUnit" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -185,7 +185,7 @@ export function StatistiquesFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="scope">Portée</Label>
                         <Select value={scope} onValueChange={setScope} disabled={isPending}>
-                            <SelectTrigger id="scope">
+                            <SelectTrigger id="scope" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

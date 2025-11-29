@@ -150,7 +150,7 @@ export function CandleForm({
                                         name="positioning"
                                         defaultValue={candle?.positioning || ""}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Sélectionner" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -207,7 +207,7 @@ export function CandleForm({
                                             }
                                             required
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Sélectionner" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -244,7 +244,7 @@ export function CandleForm({
                                                 updateMaterial(index, "unit", value as Unit)
                                             }
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>

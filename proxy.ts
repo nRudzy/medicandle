@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export default async function proxy(req: NextRequest) {
+export default function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl
     const isBoRoute = pathname.startsWith("/bo")
 
@@ -22,6 +22,8 @@ export default async function proxy(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/bo/:path*"],
+    matcher: [
+        "/bo/:path*",
+    ],
 }
 

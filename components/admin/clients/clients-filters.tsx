@@ -87,7 +87,7 @@ export function ClientsFilters() {
                     <div className="space-y-2">
                         <Label htmlFor="typeClient">Type de client</Label>
                         <Select value={typeClient} onValueChange={setTypeClient} disabled={isPending}>
-                            <SelectTrigger id="typeClient">
+                            <SelectTrigger id="typeClient" className="w-full">
                                 <SelectValue placeholder="Tous les types" />
                             </SelectTrigger>
                             <SelectContent>

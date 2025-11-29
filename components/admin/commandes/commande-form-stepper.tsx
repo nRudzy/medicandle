@@ -226,7 +226,7 @@ export function CommandeFormStepper({
                             <div
                                 className={cn(
                                     "h-0.5 flex-1 mx-2",
-                                    currentStep > step.id ? "bg-green-500" : "bg-muted"
+                                    currentStep > step.id ? "bg-green-500" : "bg-muted-foreground"
                                 )}
                             />
                         )}
@@ -251,7 +251,7 @@ export function CommandeFormStepper({
                                             value={formData.clientId}
                                             onValueChange={(value) => updateField("clientId", value)}
                                         >
-                                            <SelectTrigger className="flex-1">
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Sélectionner un client" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -346,7 +346,7 @@ export function CommandeFormStepper({
                                                                     updateLigne(index, "bougieId", value)
                                                                 }
                                                             >
-                                                                <SelectTrigger>
+                                                                <SelectTrigger className="w-full">
                                                                     <SelectValue placeholder="Sélectionner une bougie" />
                                                                 </SelectTrigger>
                                                                 <SelectContent>

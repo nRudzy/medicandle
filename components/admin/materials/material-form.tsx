@@ -75,7 +75,7 @@ export function MaterialForm({ material }: { material?: Material }) {
                         <div className="space-y-2">
                             <Label htmlFor="type">Type *</Label>
                             <Select name="type" defaultValue={material?.type} required>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Sélectionner un type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -106,7 +106,7 @@ export function MaterialForm({ material }: { material?: Material }) {
                         <div className="space-y-2">
                             <Label htmlFor="unit">Unité de référence *</Label>
                             <Select name="unit" defaultValue={material?.unit} required>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Sélectionner une unité" />
                                 </SelectTrigger>
                                 <SelectContent>
