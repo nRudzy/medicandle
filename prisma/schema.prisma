@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum MaterialType {
+  WAX
+  SCENT
+  WICK
+  CONTAINER
+  DYE
+  ACCESSORY
+  PACKAGING
+  OTHER
+}
+
+enum Unit {
+  G
+  KG
+  ML
+  L
+  PIECE
+}
+
+enum Positioning {
+  ENTRY
+  PREMIUM
+  LUXURY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(ADMIN)
+  name          String?
+  createdAt     DateTime  @default(now())
+  lastLogin     DateTime?
+}
+
+model Material {
+  id              String       @id @default(cuid())
+  name            String
+  type            MaterialType
+  costPerUnit     Float        // Cost in euros per reference unit
+  unit            Unit         // Reference unit (e.g., KG)
+  quantityPerUnit Float?       // e.g., 1000 for 1KG if unit is KG? No, usually 1 unit is 1 unit. 
+                               // If user buys 1KG, cost is X. Reference unit is KG.
+                               // Maybe this field is not strictly needed if costPerUnit is clear.
+                               // User said: "quantiteParUnite (optionnel si nécessaire) ex : 1000 pour 1 kg = 1000 g."
+                               // Let's keep it optional.
+  supplier        String?
+  currentStock    Float?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  candleMaterials CandleMaterial[]
+}
+
+model Candle {
+  id              String       @id @default(cuid())
+  name            String
+  shortDesc       String?
+  longDesc        String?
+  category        String?
+  format          String?
+  photoUrl        String?
+  active          Boolean      @default(true)
+  positioning     Positioning?
+  currentPrice    Float?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  materials       CandleMaterial[]
+  productionParams CandleProductionParams?
+  scenarioItems   ScenarioItem[]
+}
+
+model CandleMaterial {
+  id          String   @id @default(cuid())
+  candleId    String
+  materialId  String
+  quantity    Float
+  unit        Unit?    // Unit used in the recipe, might differ from material reference unit? 
+                       // For simplicity, we might want to enforce conversion or just store it.
+  
+  candle      Candle   @relation(fields: [candleId], references: [id], onDelete: Cascade)
+  material    Material @relation(fields: [materialId], references: [id])
+
+  @@unique([candleId, materialId])
+}
+
+model ProductionSettings {
+  id                String   @id @default(cuid())
+  laborRate         Float    // Hourly rate in euros
+  electricityCost   Float?   // Cost per hour or session
+  amortizationCost  Float?   // Fixed cost per candle
+  validFrom         DateTime @default(now())
+  validTo           DateTime?
+}
+
+model CandleProductionParams {
+  id              String   @id @default(cuid())
+  candleId        String   @unique
+  prepTimeMinutes Int
+  heatingTimeMinutes Int?
+  
+  candle          Candle   @relation(fields: [candleId], references: [id], onDelete: Cascade)
+}
+
+model PricingSettings {
+  id                String   @id @default(cuid())
+  targetMargin      Float?   // Percentage
+  multiplierEntry   Float
+  multiplierPremium Float
+  multiplierLuxury  Float
+  validFrom         DateTime @default(now())
+  validTo           DateTime?
+}
+
+model ProjectionScenario {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  startDate        DateTime?
+  endDate          DateTime?
+  globalHypotheses String?  // JSON or text
+  createdAt        DateTime @default(now())
+
+  items            ScenarioItem[]
+}
+
+model ScenarioItem {
+  id           String   @id @default(cuid())
+  scenarioId   String
+  candleId     String
+  estimatedQty Int
+  usedPrice    Float?   // Price used for this projection
+  
+  scenario     ProjectionScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  candle       Candle             @relation(fields: [candleId], references: [id], onDelete: Cascade)
+
+  @@unique([scenarioId, candleId])
+}
