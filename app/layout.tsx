@@ -6,11 +6,11 @@ export const metadata: Metadata = {
   description: "Gestion des bougies artisanales",
   icons: {
     icon: [
-      { url: "/branding/medicandle_logo.jpg", sizes: "any" },
-      { url: "/branding/medicandle_logo.jpg", type: "image/jpeg" },
+      { url: "/branding/medicandle_logo_no_bg.png", sizes: "any" },
+      { url: "/branding/medicandle_logo_no_bg.png", type: "image/png" },
     ],
-    shortcut: "/branding/medicandle_logo.jpg",
-    apple: "/branding/medicandle_logo.jpg",
+    shortcut: "/branding/medicandle_logo_no_bg.png",
+    apple: "/branding/medicandle_logo_no_bg.png",
   },
 }
 

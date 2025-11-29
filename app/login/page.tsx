@@ -42,7 +42,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--medicandle-rose-light)] p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-4">
                     <div className="flex justify-center mb-2">

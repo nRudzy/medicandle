@@ -78,7 +78,12 @@ setup: install db-start prisma-generate prisma-migrate prisma-seed ## Setup comp
 
 dev: ## Lancer le serveur de développement
 	@echo "🚀 Démarrage du serveur Next.js..."
+	@echo "💡 Si le HMR ne fonctionne pas, essayez: make dev-webpack"
 	$(NPM) run dev
+
+dev-webpack: ## Lancer le serveur avec webpack (meilleur HMR pour WSL2)
+	@echo "🚀 Démarrage du serveur Next.js avec webpack (polling activé)..."
+	$(NPM) run dev:webpack
 
 build: ## Build pour la production
 	@echo "📦 Build de l'application..."
