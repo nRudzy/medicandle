@@ -42,6 +42,28 @@ enum Positioning {
   LUXURY
 }
 
+enum ClientType {
+  PARTICULIER
+  PROFESSIONNEL
+}
+
+enum CommandeStatut {
+  BROUILLON
+  EN_ATTENTE_STOCK
+  EN_COURS_COMMANDE
+  EN_COURS_FABRICATION
+  TERMINEE
+  LIVREE
+  ANNULEE
+}
+
+enum BonDeCommandeMatieresStatut {
+  BROUILLON
+  ENVOYE_FOURNISSEUR
+  RECU_PARTIEL
+  RECU_TOTAL
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -64,12 +86,16 @@ model Material {
                                // User said: "quantiteParUnite (optionnel si nécessaire) ex : 1000 pour 1 kg = 1000 g."
                                // Let's keep it optional.
   supplier        String?
-  currentStock    Float?
+  currentStock    Float?       // Legacy field, kept for backward compatibility
+  stockPhysique   Float?       // Physical stock quantity
+  stockReserve    Float        @default(0) // Reserved stock for orders
+  stockMinimal    Float?       // Minimum stock threshold
   notes           String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   candleMaterials CandleMaterial[]
+  bonDeCommandeMatieresLignes BonDeCommandeMatieresLigne[]
 }
 
 model Candle {
@@ -89,6 +115,7 @@ model Candle {
   materials       CandleMaterial[]
   productionParams CandleProductionParams?
   scenarioItems   ScenarioItem[]
+  commandeLignes  CommandeLigne[]
 }
 
 model CandleMaterial {
@@ -156,4 +183,94 @@ model ScenarioItem {
   candle       Candle             @relation(fields: [candleId], references: [id], onDelete: Cascade)
 
   @@unique([scenarioId, candleId])
+}
+
+model Client {
+  id            String      @id @default(cuid())
+  typeClient    ClientType?
+  nom           String
+  prenom        String?
+  raisonSociale String?
+  email         String?
+  telephone     String?
+  adresseLigne1 String?
+  adresseLigne2 String?
+  codePostal    String?
+  ville         String?
+  pays          String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  commandes     Commande[]
+}
+
+model Commande {
+  id                    String          @id @default(cuid())
+  reference             String          @unique
+  clientId              String?
+  dateCommande          DateTime        @default(now())
+  dateLivraisonSouhaitee DateTime?
+  statut                CommandeStatut  @default(BROUILLON)
+  commentaireInterne    String?
+  commentaireClient     String?
+  montantTotalEstime    Float?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  client                Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  lignes                CommandeLigne[]
+  bonsDeCommande        BonDeCommandeMatieresCommande[]
+}
+
+model CommandeLigne {
+  id                  String    @id @default(cuid())
+  commandeId          String
+  bougieId            String
+  quantite            Int
+  prixUnitaireUtilise Float?
+  remisePourcentage   Float?
+  remiseMontant       Float?
+  montantLigne        Float?
+  notes               String?
+  createdAt           DateTime  @default(now())
+
+  commande            Commande  @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  bougie              Candle    @relation(fields: [bougieId], references: [id], onDelete: Cascade)
+}
+
+model BonDeCommandeMatieres {
+  id          String                        @id @default(cuid())
+  reference   String                        @unique
+  dateCreation DateTime                      @default(now())
+  description String?
+  statut      BonDeCommandeMatieresStatut?  @default(BROUILLON)
+  notes       String?
+  createdAt   DateTime                      @default(now())
+
+  lignes      BonDeCommandeMatieresLigne[]
+  commandes   BonDeCommandeMatieresCommande[]
+}
+
+model BonDeCommandeMatieresLigne {
+  id                      String                @id @default(cuid())
+  bonDeCommandeMatieresId String
+  matierePremiereId        String
+  quantiteACommander       Float
+  fournisseur              String?
+  notes                    String?
+  createdAt                DateTime              @default(now())
+
+  bonDeCommandeMatieres   BonDeCommandeMatieres @relation(fields: [bonDeCommandeMatieresId], references: [id], onDelete: Cascade)
+  matierePremiere         Material              @relation(fields: [matierePremiereId], references: [id], onDelete: Cascade)
+}
+
+model BonDeCommandeMatieresCommande {
+  bonDeCommandeMatieresId String
+  commandeId               String
+
+  bonDeCommandeMatieres    BonDeCommandeMatieres @relation(fields: [bonDeCommandeMatieresId], references: [id], onDelete: Cascade)
+  commande                 Commande              @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+
+  @@id([bonDeCommandeMatieresId, commandeId])
 }
