@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,9 +44,19 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100 p-4">
             <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold tracking-tight">Connexion</CardTitle>
-                    <CardDescription>
+                <CardHeader className="space-y-4">
+                    <div className="flex justify-center mb-2">
+                        <Image
+                            src="/branding/medicandle_logo_no_bg.png"
+                            alt="Medicandle"
+                            width={120}
+                            height={120}
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
+                    <CardTitle className="text-2xl font-bold tracking-tight text-center">Connexion</CardTitle>
+                    <CardDescription className="text-center">
                         Accédez au back-office de gestion
                     </CardDescription>
                 </CardHeader>

@@ -76,7 +76,7 @@ export function QuickSimulation({ candles }: { candles: Candle[] }) {
                 </div>
 
                 {selectedCandle && selectedCandle.currentPrice && (
-                    <div className="mt-4 p-3 bg-stone-50 rounded-lg border text-sm">
+                    <div className="mt-4 p-3 bg-medicandle-beige rounded-lg border text-sm">
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">Prix unitaire:</span>
                             <span className="font-medium">{formatEuro(selectedCandle.currentPrice)}</span>

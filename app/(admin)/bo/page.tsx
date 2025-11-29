@@ -124,7 +124,7 @@ export default async function BackOfficePage() {
                     <div className="grid gap-3 sm:grid-cols-2">
                         <a
                             href="/bo/matieres/nouveau"
-                            className="flex items-center gap-3 rounded-lg border p-4 hover:bg-stone-50 transition"
+                            className="flex items-center gap-3 rounded-lg border p-4 hover:bg-medicandle-beige transition"
                         >
                             <Package className="h-5 w-5 text-muted-foreground" />
                             <div>
@@ -136,7 +136,7 @@ export default async function BackOfficePage() {
                         </a>
                         <a
                             href="/bo/bougies/nouveau"
-                            className="flex items-center gap-3 rounded-lg border p-4 hover:bg-stone-50 transition"
+                            className="flex items-center gap-3 rounded-lg border p-4 hover:bg-medicandle-beige transition"
                         >
                             <Flame className="h-5 w-5 text-muted-foreground" />
                             <div>

@@ -174,7 +174,7 @@ export function ScenarioForm({ candles }: { candles: Candle[] }) {
                                 </div>
 
                                 {sc.candleId && sc.estimatedQty > 0 && sc.usedPrice > 0 && (
-                                    <div className="sm:col-span-12 text-sm text-muted-foreground bg-stone-50 p-2 rounded">
+                                    <div className="sm:col-span-12 text-sm text-muted-foreground bg-medicandle-beige p-2 rounded">
                                         CA partiel: {(sc.usedPrice * sc.estimatedQty).toFixed(2)} €
                                     </div>
                                 )}

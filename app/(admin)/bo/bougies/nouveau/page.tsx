@@ -1,4 +1,4 @@
-import { CandleForm } from "@/components/admin/candles/candle-form"
+import { CandleFormStepper } from "@/components/admin/candles/candle-form-stepper"
 import { prisma } from "@/lib/prisma"
 
 export default async function NewCandlePage() {
@@ -15,7 +15,7 @@ export default async function NewCandlePage() {
                 </p>
             </div>
 
-            <CandleForm materials={materials} />
+            <CandleFormStepper materials={materials} />
         </div>
     )
 }

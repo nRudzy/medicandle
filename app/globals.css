@@ -4,6 +4,16 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Medicandle Brand Colors */
+  --color-medicandle-sage: var(--medicandle-sage);
+  --color-medicandle-brown: var(--medicandle-brown);
+  --color-medicandle-beige: var(--medicandle-beige);
+  --color-medicandle-ivory: var(--medicandle-ivory);
+  --color-medicandle-dark-brown: var(--medicandle-dark-brown);
+  --color-medicandle-rose: var(--medicandle-rose);
+  --color-medicandle-honey: var(--medicandle-honey);
+  
+  /* System colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -45,37 +55,50 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  
+  /* Medicandle Brand Colors - Direction Artistique */
+  --medicandle-sage: #C7DCC5;           /* Vert sauge pastel - couleur signature */
+  --medicandle-brown: #7A5C4A;          /* Brun terre luxueux */
+  --medicandle-beige: #EEE9E4;           /* Beige clair / fond chic */
+  --medicandle-ivory: #FAFAF7;           /* Blanc ivoire */
+  --medicandle-dark-brown: #2A1F1A;     /* Noir brun profond - texte premium */
+  --medicandle-rose: #F1DEDA;            /* Rose floral pâle - accent */
+  --medicandle-honey: #E8C896;           /* Jaune miel doux - accent */
+  
+  /* System colors using Medicandle palette */
+  --background: var(--medicandle-ivory);
+  --foreground: var(--medicandle-dark-brown);
+  --card: var(--medicandle-ivory);
+  --card-foreground: var(--medicandle-dark-brown);
+  --popover: var(--medicandle-ivory);
+  --popover-foreground: var(--medicandle-dark-brown);
+  --primary: var(--medicandle-sage);
+  --primary-foreground: var(--medicandle-dark-brown);
+  --secondary: var(--medicandle-beige);
+  --secondary-foreground: var(--medicandle-dark-brown);
+  --muted: var(--medicandle-beige);
+  --muted-foreground: var(--medicandle-brown);
+  --accent: var(--medicandle-rose);
+  --accent-foreground: var(--medicandle-dark-brown);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: var(--medicandle-beige);
+  --input: var(--medicandle-ivory);
+  --ring: var(--medicandle-sage);
+  --chart-1: var(--medicandle-sage);
+  --chart-2: var(--medicandle-brown);
+  --chart-3: var(--medicandle-rose);
+  --chart-4: var(--medicandle-honey);
+  --chart-5: var(--medicandle-beige);
+  
+  /* Sidebar colors - using brown earth for elegance */
+  --sidebar: var(--medicandle-brown);
+  --sidebar-foreground: var(--medicandle-ivory);
+  --sidebar-primary: var(--medicandle-sage);
+  --sidebar-primary-foreground: var(--medicandle-dark-brown);
+  --sidebar-accent: rgba(199, 220, 197, 0.1); /* Sage with opacity */
+  --sidebar-accent-foreground: var(--medicandle-ivory);
+  --sidebar-border: rgba(250, 250, 247, 0.1); /* Ivory with opacity */
+  --sidebar-ring: var(--medicandle-sage);
 }
 
 .dark {
@@ -119,4 +142,34 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Medicandle Brand Color Utilities - Use these classes in your components */
+@layer utilities {
+  /* Background colors */
+  .bg-medicandle-sage { background-color: var(--medicandle-sage); }
+  .bg-medicandle-brown { background-color: var(--medicandle-brown); }
+  .bg-medicandle-beige { background-color: var(--medicandle-beige); }
+  .bg-medicandle-ivory { background-color: var(--medicandle-ivory); }
+  .bg-medicandle-dark-brown { background-color: var(--medicandle-dark-brown); }
+  .bg-medicandle-rose { background-color: var(--medicandle-rose); }
+  .bg-medicandle-honey { background-color: var(--medicandle-honey); }
+  
+  /* Text colors */
+  .text-medicandle-sage { color: var(--medicandle-sage); }
+  .text-medicandle-brown { color: var(--medicandle-brown); }
+  .text-medicandle-beige { color: var(--medicandle-beige); }
+  .text-medicandle-ivory { color: var(--medicandle-ivory); }
+  .text-medicandle-dark-brown { color: var(--medicandle-dark-brown); }
+  .text-medicandle-rose { color: var(--medicandle-rose); }
+  .text-medicandle-honey { color: var(--medicandle-honey); }
+  
+  /* Border colors */
+  .border-medicandle-sage { border-color: var(--medicandle-sage); }
+  .border-medicandle-brown { border-color: var(--medicandle-brown); }
+  .border-medicandle-beige { border-color: var(--medicandle-beige); }
+  .border-medicandle-ivory { border-color: var(--medicandle-ivory); }
+  .border-medicandle-dark-brown { border-color: var(--medicandle-dark-brown); }
+  .border-medicandle-rose { border-color: var(--medicandle-rose); }
+  .border-medicandle-honey { border-color: var(--medicandle-honey); }
 }

@@ -21,11 +21,11 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
     return (
-        <header className="border-b bg-white px-6 py-4">
+        <header className="border-b border-[var(--medicandle-beige)] bg-[var(--medicandle-ivory)] px-6 py-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-sm font-medium text-stone-500">
-                        Bienvenue
+                    <h2 className="text-sm font-medium text-[var(--medicandle-brown)]">
+                        Back Office
                     </h2>
                 </div>
 
