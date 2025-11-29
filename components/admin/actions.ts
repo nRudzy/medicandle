@@ -3,7 +3,15 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { MaterialType, Unit } from "@prisma/client"
+import { MaterialType, Unit, ClientType, CommandeStatut, BonDeCommandeMatieresStatut } from "@prisma/client"
+import { generateCommandeReference, generateBonDeCommandeMatieresReference } from "@/lib/utils/references"
+import {
+    reserveStockForCommande,
+    releaseStockForCommande,
+    consumeStockForCommande,
+    checkCommandeFeasibility,
+    calculateMaterialsNeededForCommande,
+} from "@/lib/business/commandes"
 
 export async function createMaterial(
     prevState: { error?: string } | null,
@@ -381,4 +389,599 @@ export async function createScenario(formData: FormData) {
 
   revalidatePath("/bo/projections")
   redirect("/bo/projections")
+}
+
+// ==================== CLIENTS ====================
+
+export async function createClient(
+    prevState: { error?: string } | null,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const typeClient = formData.get("typeClient") as string
+        const nom = formData.get("nom") as string
+        const prenom = formData.get("prenom") as string
+        const raisonSociale = formData.get("raisonSociale") as string
+        const email = formData.get("email") as string
+        const telephone = formData.get("telephone") as string
+        const adresseLigne1 = formData.get("adresseLigne1") as string
+        const adresseLigne2 = formData.get("adresseLigne2") as string
+        const codePostal = formData.get("codePostal") as string
+        const ville = formData.get("ville") as string
+        const pays = formData.get("pays") as string
+        const notes = formData.get("notes") as string
+
+        if (!nom || !nom.trim()) {
+            return { error: "Le nom est requis" }
+        }
+
+        await prisma.client.create({
+            data: {
+                typeClient: typeClient && typeClient !== "none" ? (typeClient as ClientType) : null,
+                nom,
+                prenom: prenom || null,
+                raisonSociale: raisonSociale || null,
+                email: email || null,
+                telephone: telephone || null,
+                adresseLigne1: adresseLigne1 || null,
+                adresseLigne2: adresseLigne2 || null,
+                codePostal: codePostal || null,
+                ville: ville || null,
+                pays: pays || null,
+                notes: notes || null,
+            },
+        })
+
+        revalidatePath("/bo/clients")
+        redirect("/bo/clients")
+    } catch (error: any) {
+        console.error("Error creating client:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la création du client. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function updateClient(
+    id: string,
+    prevState: { error?: string } | null,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const typeClient = formData.get("typeClient") as string
+        const nom = formData.get("nom") as string
+        const prenom = formData.get("prenom") as string
+        const raisonSociale = formData.get("raisonSociale") as string
+        const email = formData.get("email") as string
+        const telephone = formData.get("telephone") as string
+        const adresseLigne1 = formData.get("adresseLigne1") as string
+        const adresseLigne2 = formData.get("adresseLigne2") as string
+        const codePostal = formData.get("codePostal") as string
+        const ville = formData.get("ville") as string
+        const pays = formData.get("pays") as string
+        const notes = formData.get("notes") as string
+
+        if (!nom || !nom.trim()) {
+            return { error: "Le nom est requis" }
+        }
+
+        await prisma.client.update({
+            where: { id },
+            data: {
+                typeClient: typeClient && typeClient !== "none" ? (typeClient as ClientType) : null,
+                nom,
+                prenom: prenom || null,
+                raisonSociale: raisonSociale || null,
+                email: email || null,
+                telephone: telephone || null,
+                adresseLigne1: adresseLigne1 || null,
+                adresseLigne2: adresseLigne2 || null,
+                codePostal: codePostal || null,
+                ville: ville || null,
+                pays: pays || null,
+                notes: notes || null,
+            },
+        })
+
+        revalidatePath("/bo/clients")
+        redirect("/bo/clients")
+    } catch (error: any) {
+        console.error("Error updating client:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la mise à jour du client. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function deleteClient(id: string) {
+    try {
+        await prisma.client.delete({
+            where: { id },
+        })
+        revalidatePath("/bo/clients")
+    } catch (error: any) {
+        console.error("Error deleting client:", error)
+        throw error
+    }
+}
+
+// ==================== COMMANDES ====================
+
+export async function createCommande(
+    prevState: { error?: string; commandeId?: string } | null,
+    formData: FormData
+): Promise<{ error?: string; commandeId?: string } | void> {
+    try {
+        const clientId = formData.get("clientId") as string
+        const dateCommande = formData.get("dateCommande") as string
+        const dateLivraisonSouhaitee = formData.get("dateLivraisonSouhaitee") as string
+        const commentaireInterne = formData.get("commentaireInterne") as string
+        const commentaireClient = formData.get("commentaireClient") as string
+
+        const reference = await generateCommandeReference()
+
+        const commande = await prisma.commande.create({
+            data: {
+                reference,
+                clientId: clientId && clientId !== "none" ? clientId : null,
+                dateCommande: dateCommande ? new Date(dateCommande) : new Date(),
+                dateLivraisonSouhaitee: dateLivraisonSouhaitee ? new Date(dateLivraisonSouhaitee) : null,
+                statut: CommandeStatut.BROUILLON,
+                commentaireInterne: commentaireInterne || null,
+                commentaireClient: commentaireClient || null,
+            },
+        })
+
+        // Parse lignes from form data if present
+        const lignes: { bougieId: string; quantite: number; prixUnitaireUtilise?: number; remisePourcentage?: number; remiseMontant?: number; notes?: string }[] = []
+        let index = 0
+        while (formData.get(`lignes[${index}].bougieId`)) {
+            const bougieId = formData.get(`lignes[${index}].bougieId`) as string
+            const quantiteStr = formData.get(`lignes[${index}].quantite`) as string
+            const prixUnitaireUtiliseStr = formData.get(`lignes[${index}].prixUnitaireUtilise`) as string
+            const remisePourcentageStr = formData.get(`lignes[${index}].remisePourcentage`) as string
+            const remiseMontantStr = formData.get(`lignes[${index}].remiseMontant`) as string
+            const notes = formData.get(`lignes[${index}].notes`) as string
+
+            if (!bougieId) {
+                index++
+                continue
+            }
+
+            const quantite = parseInt(quantiteStr)
+            if (isNaN(quantite) || quantite <= 0) {
+                return { error: `La quantité pour la ligne ${index + 1} doit être un nombre positif` }
+            }
+
+            const prixUnitaireUtilise = prixUnitaireUtiliseStr ? parseFloat(prixUnitaireUtiliseStr) : undefined
+            const remisePourcentage = remisePourcentageStr ? parseFloat(remisePourcentageStr) : undefined
+            const remiseMontant = remiseMontantStr ? parseFloat(remiseMontantStr) : undefined
+
+            let montantLigne = prixUnitaireUtilise ? prixUnitaireUtilise * quantite : null
+            if (montantLigne && remisePourcentage) {
+                montantLigne = montantLigne * (1 - remisePourcentage / 100)
+            }
+            if (montantLigne && remiseMontant) {
+                montantLigne = montantLigne - remiseMontant
+            }
+
+            lignes.push({
+                bougieId,
+                quantite,
+                prixUnitaireUtilise,
+                remisePourcentage,
+                remiseMontant,
+                notes: notes || undefined,
+            })
+            index++
+        }
+
+        // Create lignes if any
+        if (lignes.length > 0) {
+            await prisma.commandeLigne.createMany({
+                data: lignes.map((l) => ({
+                    commandeId: commande.id,
+                    bougieId: l.bougieId,
+                    quantite: l.quantite,
+                    prixUnitaireUtilise: l.prixUnitaireUtilise || null,
+                    remisePourcentage: l.remisePourcentage || null,
+                    remiseMontant: l.remiseMontant || null,
+                    montantLigne: l.prixUnitaireUtilise
+                        ? (l.prixUnitaireUtilise * l.quantite * (1 - (l.remisePourcentage || 0) / 100) - (l.remiseMontant || 0))
+                        : null,
+                    notes: l.notes || null,
+                })),
+            })
+
+            // Recalculate total
+            await recalculateCommandeTotal(commande.id)
+        }
+
+        revalidatePath("/bo/commandes")
+        redirect(`/bo/commandes/${commande.id}`)
+    } catch (error: any) {
+        console.error("Error creating commande:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la création de la commande. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function updateCommande(
+    id: string,
+    prevState: { error?: string } | null,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const clientId = formData.get("clientId") as string
+        const dateCommande = formData.get("dateCommande") as string
+        const dateLivraisonSouhaitee = formData.get("dateLivraisonSouhaitee") as string
+        const commentaireInterne = formData.get("commentaireInterne") as string
+        const commentaireClient = formData.get("commentaireClient") as string
+
+        await prisma.commande.update({
+            where: { id },
+            data: {
+                clientId: clientId || null,
+                dateCommande: dateCommande ? new Date(dateCommande) : undefined,
+                dateLivraisonSouhaitee: dateLivraisonSouhaitee ? new Date(dateLivraisonSouhaitee) : null,
+                commentaireInterne: commentaireInterne || null,
+                commentaireClient: commentaireClient || null,
+            },
+        })
+
+        revalidatePath("/bo/commandes")
+        revalidatePath(`/bo/commandes/${id}`)
+    } catch (error: any) {
+        console.error("Error updating commande:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la mise à jour de la commande. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function deleteCommande(id: string) {
+    try {
+        // Check if commande has reserved stock and release it
+        const commande = await prisma.commande.findUnique({
+            where: { id },
+        })
+
+        if (commande && (commande.statut === CommandeStatut.EN_COURS_COMMANDE || commande.statut === CommandeStatut.EN_COURS_FABRICATION)) {
+            await releaseStockForCommande(id)
+        }
+
+        await prisma.commande.delete({
+            where: { id },
+        })
+        revalidatePath("/bo/commandes")
+    } catch (error: any) {
+        console.error("Error deleting commande:", error)
+        throw error
+    }
+}
+
+export async function addCommandeLigne(
+    commandeId: string,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const bougieId = formData.get("bougieId") as string
+        const quantite = parseInt(formData.get("quantite") as string)
+        const prixUnitaireUtilise = formData.get("prixUnitaireUtilise") as string
+        const remisePourcentage = formData.get("remisePourcentage") as string
+        const remiseMontant = formData.get("remiseMontant") as string
+        const notes = formData.get("notes") as string
+
+        if (!bougieId) {
+            return { error: "La bougie est requise" }
+        }
+
+        if (isNaN(quantite) || quantite <= 0) {
+            return { error: "La quantité doit être un nombre positif" }
+        }
+
+        const prixUnitaire = prixUnitaireUtilise ? parseFloat(prixUnitaireUtilise) : null
+        const remisePct = remisePourcentage ? parseFloat(remisePourcentage) : null
+        const remiseMont = remiseMontant ? parseFloat(remiseMontant) : null
+
+        let montantLigne = prixUnitaire ? prixUnitaire * quantite : null
+        if (montantLigne && remisePct) {
+            montantLigne = montantLigne * (1 - remisePct / 100)
+        }
+        if (montantLigne && remiseMont) {
+            montantLigne = montantLigne - remiseMont
+        }
+
+        await prisma.commandeLigne.create({
+            data: {
+                commandeId,
+                bougieId,
+                quantite,
+                prixUnitaireUtilise: prixUnitaire,
+                remisePourcentage: remisePct,
+                remiseMontant: remiseMont,
+                montantLigne,
+                notes: notes || null,
+            },
+        })
+
+        // Recalculate total
+        await recalculateCommandeTotal(commandeId)
+
+        revalidatePath(`/bo/commandes/${commandeId}`)
+    } catch (error: any) {
+        console.error("Error adding commande ligne:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de l'ajout de la ligne. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function updateCommandeLigne(
+    id: string,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const quantite = parseInt(formData.get("quantite") as string)
+        const prixUnitaireUtilise = formData.get("prixUnitaireUtilise") as string
+        const remisePourcentage = formData.get("remisePourcentage") as string
+        const remiseMontant = formData.get("remiseMontant") as string
+        const notes = formData.get("notes") as string
+
+        if (isNaN(quantite) || quantite <= 0) {
+            return { error: "La quantité doit être un nombre positif" }
+        }
+
+        const prixUnitaire = prixUnitaireUtilise ? parseFloat(prixUnitaireUtilise) : null
+        const remisePct = remisePourcentage ? parseFloat(remisePourcentage) : null
+        const remiseMont = remiseMontant ? parseFloat(remiseMontant) : null
+
+        let montantLigne = prixUnitaire ? prixUnitaire * quantite : null
+        if (montantLigne && remisePct) {
+            montantLigne = montantLigne * (1 - remisePct / 100)
+        }
+        if (montantLigne && remiseMont) {
+            montantLigne = montantLigne - remiseMont
+        }
+
+        const ligne = await prisma.commandeLigne.update({
+            where: { id },
+            data: {
+                quantite,
+                prixUnitaireUtilise: prixUnitaire,
+                remisePourcentage: remisePct,
+                remiseMontant: remiseMont,
+                montantLigne,
+                notes: notes || null,
+            },
+        })
+
+        // Recalculate total
+        await recalculateCommandeTotal(ligne.commandeId)
+
+        revalidatePath(`/bo/commandes/${ligne.commandeId}`)
+    } catch (error: any) {
+        console.error("Error updating commande ligne:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la mise à jour de la ligne. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function deleteCommandeLigne(id: string) {
+    try {
+        const ligne = await prisma.commandeLigne.findUnique({
+            where: { id },
+        })
+
+        if (!ligne) {
+            throw new Error("Ligne not found")
+        }
+
+        await prisma.commandeLigne.delete({
+            where: { id },
+        })
+
+        // Recalculate total
+        await recalculateCommandeTotal(ligne.commandeId)
+
+        revalidatePath(`/bo/commandes/${ligne.commandeId}`)
+    } catch (error: any) {
+        console.error("Error deleting commande ligne:", error)
+        throw error
+    }
+}
+
+async function recalculateCommandeTotal(commandeId: string) {
+    const lignes = await prisma.commandeLigne.findMany({
+        where: { commandeId },
+    })
+
+    const montantTotal = lignes.reduce((sum, ligne) => {
+        return sum + (ligne.montantLigne || 0)
+    }, 0)
+
+    await prisma.commande.update({
+        where: { id: commandeId },
+        data: {
+            montantTotalEstime: montantTotal > 0 ? montantTotal : null,
+        },
+    })
+}
+
+export async function analyzeCommandeFeasibility(commandeId: string) {
+    try {
+        return await checkCommandeFeasibility(commandeId)
+    } catch (error: any) {
+        console.error("Error analyzing commande feasibility:", error)
+        throw error
+    }
+}
+
+export async function changeCommandeStatut(
+    commandeId: string,
+    nouveauStatut: CommandeStatut
+): Promise<{ error?: string } | void> {
+    try {
+        const commande = await prisma.commande.findUnique({
+            where: { id: commandeId },
+        })
+
+        if (!commande) {
+            return { error: "Commande non trouvée" }
+        }
+
+        const ancienStatut = commande.statut
+
+        // Workflow logic
+        if (nouveauStatut === CommandeStatut.ANNULEE) {
+            // Release reserved stock if any
+            if (ancienStatut === CommandeStatut.EN_COURS_COMMANDE || ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
+                await releaseStockForCommande(commandeId)
+            }
+        } else if (nouveauStatut === CommandeStatut.EN_COURS_COMMANDE) {
+            // Reserve stock when moving to EN_COURS_COMMANDE
+            if (ancienStatut === CommandeStatut.BROUILLON || ancienStatut === CommandeStatut.EN_ATTENTE_STOCK) {
+                await reserveStockForCommande(commandeId)
+            }
+        } else if (nouveauStatut === CommandeStatut.TERMINEE) {
+            // Consume stock when production is finished
+            if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
+                await consumeStockForCommande(commandeId)
+            }
+        }
+
+        await prisma.commande.update({
+            where: { id: commandeId },
+            data: {
+                statut: nouveauStatut,
+            },
+        })
+
+        revalidatePath("/bo/commandes")
+        revalidatePath(`/bo/commandes/${commandeId}`)
+    } catch (error: any) {
+        console.error("Error changing commande statut:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors du changement de statut. Veuillez réessayer.",
+        }
+    }
+}
+
+// ==================== BONS DE COMMANDE MATIERES ====================
+
+export async function generateBonDeCommandeMatieres(
+    commandeIds: string[]
+): Promise<{ error?: string; bonId?: string }> {
+    try {
+        if (commandeIds.length === 0) {
+            return { error: "Aucune commande sélectionnée" }
+        }
+
+        const reference = await generateBonDeCommandeMatieresReference()
+
+        // Calculate total materials needed for all commandes
+        const allMaterials = new Map<string, {
+            materialId: string
+            quantiteACommander: number
+            fournisseur?: string
+        }>()
+
+        for (const commandeId of commandeIds) {
+            const materials = await calculateMaterialsNeededForCommande(commandeId)
+
+            for (const material of materials) {
+                if (material.manque > 0) {
+                    const key = material.materialId
+                    if (allMaterials.has(key)) {
+                        const existing = allMaterials.get(key)!
+                        existing.quantiteACommander += material.manque
+                    } else {
+                        // Get material to find supplier
+                        const mat = await prisma.material.findUnique({
+                            where: { id: material.materialId },
+                        })
+
+                        allMaterials.set(key, {
+                            materialId: material.materialId,
+                            quantiteACommander: material.manque,
+                            fournisseur: mat?.supplier || undefined,
+                        })
+                    }
+                }
+            }
+        }
+
+        if (allMaterials.size === 0) {
+            return { error: "Aucune matière première manquante pour ces commandes" }
+        }
+
+        // Create bon de commande
+        const bon = await prisma.bonDeCommandeMatieres.create({
+            data: {
+                reference,
+                description: `Approvisionnement matières pour ${commandeIds.length} commande(s)`,
+                statut: BonDeCommandeMatieresStatut.BROUILLON,
+            },
+        })
+
+        // Create lignes
+        for (const [materialId, data] of allMaterials.entries()) {
+            await prisma.bonDeCommandeMatieresLigne.create({
+                data: {
+                    bonDeCommandeMatieresId: bon.id,
+                    matierePremiereId: materialId,
+                    quantiteACommander: data.quantiteACommander,
+                    fournisseur: data.fournisseur,
+                },
+            })
+        }
+
+        // Link to commandes
+        for (const commandeId of commandeIds) {
+            await prisma.bonDeCommandeMatieresCommande.create({
+                data: {
+                    bonDeCommandeMatieresId: bon.id,
+                    commandeId,
+                },
+            })
+        }
+
+        revalidatePath("/bo/bons-de-commande")
+        return { bonId: bon.id }
+    } catch (error: any) {
+        console.error("Error generating bon de commande matières:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la génération du bon de commande. Veuillez réessayer.",
+        }
+    }
+}
+
+export async function updateBonDeCommandeMatieres(
+    id: string,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const description = formData.get("description") as string
+        const statut = formData.get("statut") as string
+        const notes = formData.get("notes") as string
+
+        await prisma.bonDeCommandeMatieres.update({
+            where: { id },
+            data: {
+                description: description || null,
+                statut: statut ? (statut as BonDeCommandeMatieresStatut) : null,
+                notes: notes || null,
+            },
+        })
+
+        revalidatePath("/bo/bons-de-commande")
+        revalidatePath(`/bo/bons-de-commande/${id}`)
+    } catch (error: any) {
+        console.error("Error updating bon de commande matières:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la mise à jour du bon de commande. Veuillez réessayer.",
+        }
+    }
 }
