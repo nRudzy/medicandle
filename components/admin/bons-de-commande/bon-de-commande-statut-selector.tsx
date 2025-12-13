@@ -1,6 +1,6 @@
 "use client"
 
-import { BonDeCommandeMatieresStatut } from "@prisma/client"
+import { BonDeCommandeMatieresStatut } from "@/lib/types"
 import {
     Select,
     SelectContent,

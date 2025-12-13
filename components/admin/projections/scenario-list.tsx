@@ -1,6 +1,6 @@
 "use client"
 
-import { ProjectionScenario, ScenarioItem, Candle } from "@prisma/client"
+import { ProjectionScenario, ScenarioItem, Candle } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

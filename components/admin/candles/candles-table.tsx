@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Candle, Positioning } from "@prisma/client"
+import { Candle, Positioning } from "@/lib/types"
 import {
     Table,
     TableBody,

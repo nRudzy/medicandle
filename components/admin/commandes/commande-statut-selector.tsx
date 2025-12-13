@@ -1,6 +1,6 @@
 "use client"
 
-import { CommandeStatut } from "@prisma/client"
+import { CommandeStatut } from "@/lib/types"
 import {
     Select,
     SelectContent,

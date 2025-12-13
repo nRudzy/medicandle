@@ -1,6 +1,6 @@
 "use client"
 
-import { ScenarioItem, Candle } from "@prisma/client"
+import { ScenarioItem, Candle } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
 

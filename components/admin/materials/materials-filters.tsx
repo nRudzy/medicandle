@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MaterialType } from "@prisma/client"
+import { MaterialType } from "@/lib/types"
 import { X } from "lucide-react"
 
 const materialTypeLabels: Record<MaterialType, string> = {

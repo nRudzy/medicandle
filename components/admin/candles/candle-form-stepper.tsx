@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useActionState, useTransition } from "react"
-import { Material, MaterialType, Unit, Positioning } from "@prisma/client"
+import { Material, MaterialType, Unit, Positioning } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -47,7 +47,7 @@ const unitLabels: Record<Unit, string> = {
 type RecipeMaterial = {
     materialId: string
     quantity: number
-    unit: Unit
+    unit: Unit | null
 }
 
 type CandleFormData = {
@@ -58,14 +58,14 @@ type CandleFormData = {
     positioning: Positioning | ""
     shortDesc: string
     longDesc: string
-    
+
     // Step 2: Recette
     materials: RecipeMaterial[]
-    
+
     // Step 3: Production
     prepTimeMinutes: number | ""
     heatingTimeMinutes: number | ""
-    
+
     // Step 4: Prix
     currentPrice: number | ""
 }
@@ -89,7 +89,7 @@ type CandleWithRelations = {
     materials: Array<{
         materialId: string
         quantity: number
-        unit: Unit
+        unit: Unit | null
         material: {
             id: string
         }
@@ -109,7 +109,7 @@ export function CandleFormStepper({
 }) {
     const isEditMode = !!candle
     const [state, formAction] = useActionState(
-        isEditMode 
+        isEditMode
             ? (prevState: { error?: string } | null, formData: FormData) => updateCandle(candle.id, prevState, formData)
             : createCandle,
         null
@@ -215,7 +215,7 @@ export function CandleFormStepper({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        
+
         // Validate all steps
         for (let step = 1; step <= STEPS.length; step++) {
             const error = validateStep(step)
@@ -280,8 +280,8 @@ export function CandleFormStepper({
                                     currentStep > step.id
                                         ? "bg-green-500 border-green-500 text-white"
                                         : currentStep === step.id
-                                        ? "bg-primary border-primary text-primary-foreground"
-                                        : "bg-background border-muted text-muted-foreground"
+                                            ? "bg-primary border-primary text-primary-foreground"
+                                            : "bg-background border-muted text-muted-foreground"
                                 )}
                             >
                                 {currentStep > step.id ? (
@@ -566,7 +566,7 @@ export function CandleFormStepper({
                     <div className="flex gap-3">
                         {currentStep === STEPS.length && (
                             <Button type="submit" disabled={isPending}>
-                                {isPending 
+                                {isPending
                                     ? (isEditMode ? "Modification en cours..." : "Création en cours...")
                                     : (isEditMode ? "Modifier la bougie" : "Créer la bougie")
                                 }

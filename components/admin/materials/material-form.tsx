@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
-import { Material, MaterialType, Unit } from "@prisma/client"
+import { Material, MaterialType, Unit } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

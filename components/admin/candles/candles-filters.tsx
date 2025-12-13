@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Positioning } from "@prisma/client"
+import { Positioning } from "@/lib/types"
 import { X } from "lucide-react"
 
 const positioningLabels: Record<Positioning, string> = {

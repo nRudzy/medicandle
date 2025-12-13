@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Candle } from "@prisma/client"
+import { Candle } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

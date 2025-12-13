@@ -16,14 +16,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createClient, updateClient } from "../actions"
 import { ArrowLeft, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { Client, ClientType } from "@prisma/client"
+import { Client, ClientType } from "@/lib/types"
 
 export function ClientForm({ client }: { client?: Client }) {
     const isEditMode = !!client
     const [state, formAction] = useActionState(
         isEditMode
             ? (prevState: { error?: string } | null, formData: FormData) =>
-                  updateClient(client.id, prevState, formData)
+                updateClient(client.id, prevState, formData)
             : createClient,
         null
     )

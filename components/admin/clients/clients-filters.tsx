@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ClientType } from "@prisma/client"
+import { ClientType } from "@/lib/types"
 import { X } from "lucide-react"
 
 const clientTypeLabels: Record<ClientType, string> = {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Client, ClientType } from "@prisma/client"
+import { Client, ClientType } from "@/lib/types"
 import {
     Table,
     TableBody,

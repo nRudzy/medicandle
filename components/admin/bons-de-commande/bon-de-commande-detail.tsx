@@ -1,6 +1,6 @@
 "use client"
 
-import { BonDeCommandeMatieres, Material, Unit } from "@prisma/client"
+import { BonDeCommandeMatieres, Material, Unit } from "@/lib/types"
 import {
     Table,
     TableBody,

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CommandeLigne, Candle } from "@prisma/client"
+import { CommandeLigne, Candle } from "@/lib/types"
 import {
     Table,
     TableBody,
@@ -124,8 +124,8 @@ export function CommandeLignesEditor({
                                     {ligne.remisePourcentage
                                         ? `${ligne.remisePourcentage}%`
                                         : ligne.remiseMontant
-                                          ? formatEuro(ligne.remiseMontant)
-                                          : "—"}
+                                            ? formatEuro(ligne.remiseMontant)
+                                            : "—"}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     {formatEuro(ligne.montantLigne)}

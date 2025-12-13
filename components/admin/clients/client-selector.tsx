@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Client } from "@prisma/client"
+import { Client } from "@/lib/types"
 import {
     Select,
     SelectContent,

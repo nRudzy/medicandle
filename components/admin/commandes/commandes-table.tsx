@@ -1,6 +1,6 @@
 "use client"
 
-import { Commande, CommandeStatut } from "@prisma/client"
+import { Commande, CommandeStatut } from "@/lib/types"
 import {
     Table,
     TableBody,
@@ -47,10 +47,10 @@ const statutColors: Record<CommandeStatut, string> = {
     ANNULEE: "bg-red-100 text-red-800",
 }
 
-export function CommandesTable({ 
+export function CommandesTable({
     commandes,
     feasibilityMap,
-}: { 
+}: {
     commandes: CommandeWithClient[]
     feasibilityMap?: Map<string, boolean | null>
 }) {

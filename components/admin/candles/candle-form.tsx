@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useActionState } from "react"
-import { Material, MaterialType, Unit, Positioning } from "@prisma/client"
+import { Material, MaterialType, Unit, Positioning } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -47,7 +47,7 @@ const unitLabels: Record<Unit, string> = {
 type RecipeMaterial = {
     materialId: string
     quantity: number
-    unit: Unit
+    unit: Unit | null
 }
 
 export function CandleForm({

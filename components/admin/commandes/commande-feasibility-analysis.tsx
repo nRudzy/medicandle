@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
-import { Unit } from "@prisma/client"
+import { Unit } from "@/lib/types"
 
 const unitLabels: Record<Unit, string> = {
     G: "g",
@@ -67,8 +67,8 @@ export function CommandeFeasibilityAnalysis({
                                 <TableRow
                                     key={material.materialId}
                                     className={
-                                        material.manque > 0 
-                                            ? "bg-red-50 hover:bg-red-100" 
+                                        material.manque > 0
+                                            ? "bg-red-50 hover:bg-red-100"
                                             : "bg-green-50 hover:bg-green-100"
                                     }
                                 >

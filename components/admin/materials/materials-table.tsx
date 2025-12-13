@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Material, MaterialType, Unit } from "@prisma/client"
+import { Material, MaterialType, Unit } from "@/lib/types"
 import {
     Table,
     TableBody,
@@ -83,7 +83,7 @@ export function MaterialsTable({ materials }: { materials: Material[] }) {
                             const stockPhysique = material.stockPhysique ?? 0
                             const stockReserve = material.stockReserve ?? 0
                             const stockDisponible = stockPhysique - stockReserve
-                            
+
                             return (
                                 <TableRow key={material.id} className="hover:bg-[var(--medicandle-beige)]/30">
                                     <TableCell className="font-medium">{material.name}</TableCell>

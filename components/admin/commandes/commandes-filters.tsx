@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CommandeStatut } from "@prisma/client"
+import { CommandeStatut } from "@/lib/types"
 import { X } from "lucide-react"
 
 const statutLabels: Record<CommandeStatut, string> = {

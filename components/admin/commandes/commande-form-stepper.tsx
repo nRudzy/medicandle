@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useActionState, useTransition } from "react"
-import { Client, Candle, CommandeStatut } from "@prisma/client"
+import { Client, Candle, CommandeStatut } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +36,7 @@ type CommandeFormData = {
     dateLivraisonSouhaitee: string
     commentaireInterne: string
     commentaireClient: string
-    
+
     // Step 2: Lignes de commande
     lignes: CommandeLigneData[]
 }
@@ -198,8 +198,8 @@ export function CommandeFormStepper({
                                     currentStep > step.id
                                         ? "bg-green-500 border-green-500 text-white"
                                         : currentStep === step.id
-                                        ? "bg-primary border-primary text-primary-foreground"
-                                        : "bg-background border-muted text-muted-foreground"
+                                            ? "bg-primary border-primary text-primary-foreground"
+                                            : "bg-background border-muted text-muted-foreground"
                                 )}
                             >
                                 {currentStep > step.id ? (
