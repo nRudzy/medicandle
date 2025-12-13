@@ -10,7 +10,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
-import { StatutRepartition, CommandeStatut } from "@/lib/business/statistiques"
+import { StatutRepartition } from "@/lib/business/statistiques"
+import { CommandeStatut } from "@/lib/types"
 
 interface StatutsRepartitionProps {
     repartition: StatutRepartition[]
@@ -74,7 +75,7 @@ export function StatutsRepartition({ repartition }: StatutsRepartitionProps) {
                                         cy="50%"
                                         labelLine={false}
                                         label={({ name, percent }) =>
-                                            `${name}: ${(percent * 100).toFixed(0)}%`
+                                            `${name}: ${((percent || 0) * 100).toFixed(0)}%`
                                         }
                                         outerRadius={80}
                                         fill="#8884d8"

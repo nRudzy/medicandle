@@ -57,7 +57,11 @@ export function CandleForm({
     materials: Material[]
     candle?: any
 }) {
-    const [state, formAction, isPending] = useActionState(createCandle, null)
+    const actionWrapper = async (prevState: void | { error?: string } | null, formData: FormData) => {
+        const state = prevState === undefined ? null : prevState
+        return createCandle(state, formData)
+    }
+    const [state, formAction, isPending] = useActionState(actionWrapper, null)
     const [recipeMaterials, setRecipeMaterials] = useState<RecipeMaterial[]>(
         candle?.materials?.map((cm: any) => ({
             materialId: cm.materialId,
@@ -239,7 +243,7 @@ export function CandleForm({
                                         <Label>Unité</Label>
                                         <Select
                                             name={`materials[${index}].unit`}
-                                            value={rm.unit}
+                                            value={rm.unit || undefined}
                                             onValueChange={(value) =>
                                                 updateMaterial(index, "unit", value as Unit)
                                             }

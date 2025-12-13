@@ -54,7 +54,14 @@ export function CommandeFormStepper({
     candles: Candle[]
 }) {
     const router = useRouter()
-    const [state, formAction] = useActionState(createCommande, null)
+
+    // Create wrapper function with correct signature for useActionState
+    const actionWrapper = async (prevState: void | { error?: string; commandeId?: string } | null, formData: FormData) => {
+        const state = prevState === undefined ? null : prevState
+        return createCommande(state, formData)
+    }
+
+    const [state, formAction] = useActionState(actionWrapper, null)
     const [isPending, startTransition] = useTransition()
     const [currentStep, setCurrentStep] = useState(1)
     const [commandeId, setCommandeId] = useState<string | null>(null)

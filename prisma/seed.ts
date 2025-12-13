@@ -51,7 +51,7 @@ async function main() {
             costPerUnit: 12.50, // 12.50€
             unit: Unit.KG,
             supplier: 'Fournisseur Bio',
-            currentStock: 10.0,
+            stockPhysique: 10.0,
         },
     })
 
@@ -62,7 +62,7 @@ async function main() {
             costPerUnit: 45.00, // 45€
             unit: Unit.L, // or ML? Let's say L for bulk buy
             supplier: 'Grasse Parfums',
-            currentStock: 1.0,
+            stockPhysique: 1.0,
         },
     })
 
@@ -73,7 +73,7 @@ async function main() {
             costPerUnit: 0.15, // 0.15€ per piece
             unit: Unit.PIECE,
             supplier: 'WickMaster',
-            currentStock: 500,
+            stockPhysique: 500,
         },
     })
 
@@ -84,7 +84,7 @@ async function main() {
             costPerUnit: 1.20, // 1.20€
             unit: Unit.PIECE,
             supplier: 'GlassCo',
-            currentStock: 200,
+            stockPhysique: 200,
         },
     })
 

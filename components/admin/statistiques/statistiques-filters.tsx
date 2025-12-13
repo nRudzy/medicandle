@@ -172,11 +172,11 @@ export function StatistiquesFilters() {
 
                 <div className="space-y-2">
                     <Label>Type de chiffre</Label>
-                    <Tabs value={type} onValueChange={setType} disabled={isPending}>
+                    <Tabs value={type} onValueChange={setType}>
                         <TabsList>
-                            <TabsTrigger value="realise">Réalisé</TabsTrigger>
-                            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-                            <TabsTrigger value="previsionnel">Prévisionnel</TabsTrigger>
+                            <TabsTrigger value="realise" disabled={isPending}>Réalisé</TabsTrigger>
+                            <TabsTrigger value="pipeline" disabled={isPending}>Pipeline</TabsTrigger>
+                            <TabsTrigger value="previsionnel" disabled={isPending}>Prévisionnel</TabsTrigger>
                         </TabsList>
                     </Tabs>
                 </div>
@@ -203,8 +203,8 @@ export function StatistiquesFilters() {
                                 {scope === "client"
                                     ? "Client"
                                     : scope === "bougie"
-                                    ? "Bougie"
-                                    : "Collection"}
+                                        ? "Bougie"
+                                        : "Collection"}
                             </Label>
                             <Input
                                 id="scopeValue"
@@ -215,8 +215,8 @@ export function StatistiquesFilters() {
                                     scope === "client"
                                         ? "ID ou nom du client"
                                         : scope === "bougie"
-                                        ? "ID ou nom de la bougie"
-                                        : "Nom de la collection"
+                                            ? "ID ou nom de la bougie"
+                                            : "Nom de la collection"
                                 }
                                 disabled={isPending}
                             />

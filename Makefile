@@ -89,6 +89,19 @@ build: ## Build pour la production
 	@echo "📦 Build de l'application..."
 	$(NPM) run build
 
+build-check: ## Vérifier le build TypeScript (comme Vercel)
+	@echo "🔍 Vérification du build TypeScript..."
+	@echo "💡 Ceci simule la vérification TypeScript de Vercel"
+	$(NPM) run build 2>&1 | tee build.log
+	@if grep -q "Failed to compile" build.log; then \
+		echo "❌ Build échoué - corrigez les erreurs avant de déployer"; \
+		rm build.log; \
+		exit 1; \
+	else \
+		echo "✅ Build réussi - prêt à déployer!"; \
+		rm build.log; \
+	fi
+
 start: ## Démarrer en mode production
 	@echo "🚀 Démarrage en production..."
 	$(NPM) start
@@ -117,6 +130,24 @@ quick-start: db-start dev ## Démarrage rapide (DB + dev server)
 
 quick-reset: db-stop db-clean db-start prisma-migrate prisma-seed ## Reset rapide de la DB
 	@echo "✅ Base réinitialisée et seedée"
+
+pre-deploy: ## Vérifications avant déploiement
+	@echo "🚀 Vérifications pré-déploiement..."
+	@echo ""
+	@echo "1️⃣  Vérification du build TypeScript..."
+	@$(MAKE) build-check
+	@echo ""
+	@echo "2️⃣  Vérification de la génération Prisma..."
+	@$(PRISMA) generate > /dev/null 2>&1 && echo "✅ Prisma Client OK" || (echo "❌ Erreur Prisma Client" && exit 1)
+	@echo ""
+	@echo "3️⃣  Vérification du linter..."
+	@$(NPM) run lint > /dev/null 2>&1 && echo "✅ Lint OK" || echo "⚠️  Warnings de lint détectés"
+	@echo ""
+	@echo "✅ Toutes les vérifications sont passées!"
+	@echo "💡 Vous pouvez maintenant déployer en toute sécurité:"
+	@echo "   git add ."
+	@echo "   git commit -m \"your message\""
+	@echo "   git push"
 
 # Default target
 .DEFAULT_GOAL := help

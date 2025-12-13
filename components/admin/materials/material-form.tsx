@@ -38,15 +38,22 @@ const units: { value: Unit; label: string }[] = [
 ]
 
 export function MaterialForm({ material }: { material?: Material }) {
-    const createAction = (prevState: { error?: string } | null, formData: FormData) =>
-        createMaterial(prevState, formData)
-    const updateAction = (prevState: { error?: string } | null, formData: FormData) =>
-        updateMaterial(material!.id, prevState, formData)
+    // Create unified wrapper function with correct signature for useActionState
+    const actionWrapper = async (
+        prevState: void | { error?: string } | null,
+        formData: FormData
+    ): Promise<void | { error?: string } | null> => {
+        // Convert void to null for our action functions
+        const state = prevState === undefined ? null : prevState as { error?: string } | null
 
-    const [state, formAction, isPending] = useActionState(
-        material ? updateAction : createAction,
-        null
-    )
+        if (material) {
+            return await updateMaterial(material.id, state, formData)
+        } else {
+            return await createMaterial(state, formData)
+        }
+    }
+
+    const [state, formAction, isPending] = useActionState(actionWrapper, null)
 
     return (
         <form action={formAction}>

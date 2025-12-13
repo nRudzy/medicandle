@@ -108,12 +108,23 @@ export function CandleFormStepper({
     candle?: CandleWithRelations
 }) {
     const isEditMode = !!candle
-    const [state, formAction] = useActionState(
-        isEditMode
-            ? (prevState: { error?: string } | null, formData: FormData) => updateCandle(candle.id, prevState, formData)
-            : createCandle,
-        null
-    )
+
+    // Create unified wrapper function with correct signature for useActionState
+    const actionWrapper = async (
+        prevState: void | { error?: string } | null,
+        formData: FormData
+    ): Promise<void | { error?: string } | null> => {
+        // Convert void to null for our action functions
+        const state = prevState === undefined ? null : prevState as { error?: string } | null
+
+        if (isEditMode) {
+            return await updateCandle(candle.id, state, formData)
+        } else {
+            return await createCandle(state, formData)
+        }
+    }
+
+    const [state, formAction] = useActionState(actionWrapper, null)
     const [isPending, startTransition] = useTransition()
     const [currentStep, setCurrentStep] = useState(1)
     const [formData, setFormData] = useState<CandleFormData>({
@@ -248,7 +259,7 @@ export function CandleFormStepper({
         formData.materials.forEach((m, index) => {
             submitFormData.append(`materials[${index}].materialId`, m.materialId)
             submitFormData.append(`materials[${index}].quantity`, String(m.quantity))
-            submitFormData.append(`materials[${index}].unit`, m.unit)
+            submitFormData.append(`materials[${index}].unit`, m.unit || "G")
         })
 
         // Submit using startTransition to avoid NEXT_REDIRECT error
@@ -441,7 +452,7 @@ export function CandleFormStepper({
                                         <div className="sm:col-span-3 space-y-2">
                                             <Label>Unité</Label>
                                             <Select
-                                                value={rm.unit}
+                                                value={rm.unit || undefined}
                                                 onValueChange={(value) =>
                                                     updateMaterial(index, "unit", value as Unit)
                                                 }

@@ -491,9 +491,9 @@ export async function getTopClients(filters: StatistiquesFilters): Promise<TopCl
         if (!clientsMap.has(clientId)) {
             clientsMap.set(clientId, {
                 clientId,
-                nom: commande.client.nom,
-                prenom: commande.client.prenom,
-                raisonSociale: commande.client.raisonSociale,
+                nom: commande?.client?.nom || '',
+                prenom: commande?.client?.prenom || '',
+                raisonSociale: commande?.client?.raisonSociale || '',
                 nbCommandes: 0,
                 caCumule: 0,
                 dateDerniereCommande: null,

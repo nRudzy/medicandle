@@ -20,13 +20,22 @@ import { Client, ClientType } from "@/lib/types"
 
 export function ClientForm({ client }: { client?: Client }) {
     const isEditMode = !!client
-    const [state, formAction] = useActionState(
-        isEditMode
-            ? (prevState: { error?: string } | null, formData: FormData) =>
-                updateClient(client.id, prevState, formData)
-            : createClient,
-        null
-    )
+    // Create unified wrapper function with correct signature for useActionState
+    const actionWrapper = async (
+        prevState: void | { error?: string } | null,
+        formData: FormData
+    ): Promise<void | { error?: string } | null> => {
+        // Convert void to null for our action functions
+        const state = prevState === undefined ? null : prevState as { error?: string } | null
+
+        if (isEditMode) {
+            return await updateClient(client.id, state, formData)
+        } else {
+            return await createClient(state, formData)
+        }
+    }
+
+    const [state, formAction] = useActionState(actionWrapper, null)
 
     return (
         <form action={formAction}>

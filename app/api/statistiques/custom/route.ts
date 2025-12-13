@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
         const commandes = await prisma.commande.findMany({
             where,
             include: {
+                client: true,
                 lignes: {
                     include: {
                         bougie: {
@@ -158,16 +159,16 @@ export async function GET(request: NextRequest) {
 
                     const productionCost = ligne.bougie.productionParams
                         ? calculateProductionCost(
-                              {
-                                  prepTimeMinutes: ligne.bougie.productionParams.prepTimeMinutes,
-                                  heatingTimeMinutes: ligne.bougie.productionParams.heatingTimeMinutes || undefined,
-                              },
-                              {
-                                  laborRate: productionSettings.laborRate,
-                                  electricityCost: productionSettings.electricityCost,
-                                  amortizationCost: productionSettings.amortizationCost,
-                              }
-                          )
+                            {
+                                prepTimeMinutes: ligne.bougie.productionParams.prepTimeMinutes,
+                                heatingTimeMinutes: ligne.bougie.productionParams.heatingTimeMinutes || undefined,
+                            },
+                            {
+                                laborRate: productionSettings.laborRate,
+                                electricityCost: productionSettings.electricityCost,
+                                amortizationCost: productionSettings.amortizationCost,
+                            }
+                        )
                         : 0
 
                     const coutParBougie = materialCost + productionCost
