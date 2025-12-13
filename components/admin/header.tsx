@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogOut, User } from "lucide-react"
 
+import { MobileSidebar } from "./mobile-sidebar"
+
 interface HeaderProps {
     user: {
         name?: string | null
@@ -23,8 +25,9 @@ export function Header({ user }: HeaderProps) {
     return (
         <header className="border-b border-[var(--medicandle-beige)] bg-[var(--medicandle-ivory)] px-6 py-4">
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-sm font-medium text-[var(--medicandle-brown)]">
+                <div className="flex items-center gap-2">
+                    <MobileSidebar />
+                    <h2 className="text-sm font-medium text-[var(--medicandle-brown)] hidden md:block">
                         Back Office
                     </h2>
                 </div>

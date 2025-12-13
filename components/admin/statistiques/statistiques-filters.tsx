@@ -173,7 +173,7 @@ export function StatistiquesFilters() {
                 <div className="space-y-2">
                     <Label>Type de chiffre</Label>
                     <Tabs value={type} onValueChange={setType}>
-                        <TabsList>
+                        <TabsList className="w-full grid grid-cols-3 h-auto">
                             <TabsTrigger value="realise" disabled={isPending}>Réalisé</TabsTrigger>
                             <TabsTrigger value="pipeline" disabled={isPending}>Pipeline</TabsTrigger>
                             <TabsTrigger value="previsionnel" disabled={isPending}>Prévisionnel</TabsTrigger>

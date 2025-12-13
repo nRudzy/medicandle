@@ -16,7 +16,7 @@ export default async function AdminLayout({
 
     return (
         <div className="flex h-screen bg-[var(--medicandle-beige)]">
-            <Sidebar />
+            <Sidebar className="hidden md:flex" />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header user={session.user} />
                 <main className="flex-1 overflow-y-auto p-6 bg-[var(--medicandle-beige)]">

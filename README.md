@@ -1,203 +1,97 @@
-# Medicandle - Back Office
+# 🕯️ Medicandle - Back Office
 
-Application de gestion pour une marque de bougies artisanales haut de gamme.
+![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
-## 🚀 Démarrage rapide
+> Application de gestion complète pour une marque de bougies artisanales haut de gamme.
 
-### Première installation
+## ✨ Fonctionnalités Clés
 
-```bash
-# Setup complet (installe tout et démarre la DB)
-make setup
+Une suite d'outils puissants pour gérer l'ensemble du cycle de vie de production et de vente.
 
-# Démarrer le serveur
-make dev
-```
+### 📊 Dashboard & Analytics
+- **KPIs en temps réel** : Suivi du chiffre d'affaires, des commandes et de la production.
+- **Graphiques interactifs** : Visualisation des ventes par période, collection et statut.
+- **Alertes intelligentes** : Notifications de stock bas et de réapprovisionnement nécessaire.
 
-L'application sera disponible sur **http://localhost:3000**
+### 🕯️ Gestion des Produits
+- **Fiches Bougies Détaillées** : Gestion multi-onglets (Informations, Recette, Production, Prix).
+- **Calculs Automatiques** :
+  - Coût de revient précis (matières premières + main d'œuvre + charges).
+  - Suggestions de prix de vente basées sur le positionnement (Entrée, Premium, Luxe).
+  - Calcul des marges en temps réel.
 
-### Identifiants par défaut
+### 📦 Stocks & Matières Premières
+- **Inventaire Centralisé** : Suivi précis des cires, parfums, mèches et contenants.
+- **Conversion d'Unités** : Gestion intelligente des unités (g, kg, L, ml, pièces).
+- **Fournisseurs** : Base de données fournisseurs et historique des coûts.
 
-- **Email**: `admin@medicandle.com`
-- **Mot de passe**: `admin123`
+### 💰 Finance & Projections
+- **Scénarios Prévisionnels** : Simulation de chiffre d'affaires basée sur des hypothèses de vente.
+- **Analyses de Rentabilité** : Identification des produits les plus performants.
+- **Exports PDF** : Génération de fiches techniques et de rapports.
 
-## 📋 Commandes Makefile
+## 🛠️ Stack Technique
 
-### Commandes principales
+Construit avec les dernières technologies pour performance et fiabilité.
 
-```bash
-make help           # Afficher toutes les commandes disponibles
-make setup          # Setup complet du projet (première fois)
-make dev            # Lancer le serveur de développement
-make quick-start    # DB + dev server (démarrage rapide quotidien)
-```
+- **Framework** : [Next.js 16](https://nextjs.org/) (App Router, Server Actions)
+- **Langage** : [TypeScript](https://www.typescriptlang.org/)
+- **Base de Données** : [PostgreSQL](https://www.postgresql.org/)
+- **ORM** : [Prisma 7](https://www.prisma.io/)
+- **Authentification** : [NextAuth.js v5](https://authjs.dev/)
+- **Interface** : [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
+- **Visualisation** : [Recharts](https://recharts.org/)
 
-### Base de données
+## 🚀 Installation
 
-```bash
-make db-start       # Démarrer PostgreSQL
-make db-stop        # Arrêter PostgreSQL
-make db-clean       # Supprimer la base et les volumes
-make db-logs        # Voir les logs PostgreSQL
-make status         # Status des conteneurs Docker
-```
+### Prérequis
 
-### Prisma
+- Node.js 18+
+- Docker (pour la base de données locale)
 
-```bash
-make prisma-generate       # Générer le client Prisma
-make prisma-migrate        # Créer/appliquer migrations
-make prisma-seed           # Seed la base avec données initiales
-make prisma-studio         # Ouvrir Prisma Studio (GUI)
-make prisma-reset          # Reset complet (⚠️ supprime tout)
-```
+### Démarrage Rapide
 
-### Utilitaires
+1.  **Cloner le dépôt**
+    ```bash
+    git clone https://github.com/votre-username/medicandle.git
+    cd medicandle
+    ```
 
-```bash
-make build          # Build pour production
-make start          # Démarrer en mode production
-make lint           # Lancer le linter
-make clean          # Nettoyage complet
-make quick-reset    # Reset rapide de la DB
-```
+2.  **Installer les dépendances**
+    ```bash
+    npm install
+    ```
 
-## 🏗️ Architecture
+3.  **Configurer l'environnement**
+    Copiez le fichier d'exemple et remplissez vos variables :
+    ```bash
+    cp .env.example .env
+    ```
 
-```
-medicandle/
-├── app/
-│   ├── (public)/           # Site vitrine public
-│   ├── (admin)/bo/         # Back-office protégé
-│   ├── api/auth/           # API NextAuth
-│   └── login/              # Page de connexion
-├── components/
-│   ├── admin/              # Composants back-office
-│   │   ├── candles/
-│   │   ├── materials/
-│   │   ├── projections/
-│   │   └── settings/
-│   └── ui/                 # Shadcn UI components
-├── lib/
-│   ├── business/           # Logique métier
-│   │   ├── materials.ts    # Calculs matières
-│   │   ├── production.ts   # Calculs production
-│   │   ├── pricing.ts      # Calculs prix/marges
-│   │   └── projections.ts  # Calculs CA
-│   └── prisma.ts           # Client Prisma
-├── prisma/
-│   ├── schema.prisma       # Schéma de base
-│   ├── seed.ts             # Données initiales
-│   └── migrations/
-└── docker-compose.yml      # PostgreSQL config
-```
+4.  **Lancer l'environnement de développement**
+    Utilisez la commande simplifiée pour tout démarrer (DB + App) :
+    ```bash
+    make quick-start
+    ```
 
-## ✨ Fonctionnalités
+L'application sera accessible sur `http://localhost:3000`.
 
-### ✅ Modules implémentés
+## 🔐 Variables d'Environnement
 
-- **Authentification** - NextAuth.js avec protection routes
-- **Dashboard** - KPIs, alertes stock, actions rapides
-- **Matières premières** - CRUD complet avec gestion stock
-- **Paramètres** - Production (taux horaire, électricité) & Pricing (multiplicateurs)
-- **Bougies** - Gestion complète avec :
-  - Formulaire multi-onglets (info, recette, production, prix)
-  - Calculs automatiques des coûts (matières + production)
-  - Simulation de prix selon positionnement
-  - Export PDF des fiches produit
-- **Projections** - Scénarios prévisionnels avec :
-  - Simulation rapide de CA
-  - Gestion multi-produits
-  - Graphiques de répartition (Recharts)
+Les variables suivantes sont nécessaires au bon fonctionnement de l'application :
 
-### 🎯 Calculs automatiques
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | Chaîne de connexion PostgreSQL |
+| `AUTH_SECRET` | Clé secrète pour signer les sessions (générer avec `openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | URL de l'application (ex: `http://localhost:3000`) |
 
-- **Coûts matières** avec conversions d'unités (g, kg, ml, L)
-- **Coûts production** (temps × taux horaire + électricité)
-- **Prix suggérés** selon positionnement (entrée/premium/luxe)
-- **Marges en temps réel** avec code couleur
+## 📄 Licence
 
-## 🛠️ Stack technique
-
-- **Framework**: Next.js 16 (App Router, Server Actions)
-- **Base de données**: PostgreSQL 16 (Docker)
-- **ORM**: Prisma 7
-- **Auth**: NextAuth.js v5
-- **UI**: Tailwind CSS + Shadcn UI
-- **Charts**: Recharts
-- **PDF**: jsPDF
-- **Langue**: TypeScript
-
-## 📦 Structure de la base
-
-**Modèles principaux** :
-- `User` - Utilisateurs admin
-- `Material` - Matières premières (cire, parfums, mèches, contenants...)
-- `Candle` - Produits bougies
-- `CandleMaterial` - Recettes (many-to-many)
-- `CandleProductionParams` - Temps de production
-- `ProductionSettings` - Paramètres globaux production
-- `PricingSettings` - Paramètres globaux prix
-- `ProjectionScenario` - Scénarios prévisionnels
-- `ScenarioItem` - Items de projection
-
-## 🔧 Variables d'environnement
-
-Créer un fichier `.env` :
-
-```env
-DATABASE_URL="postgresql://postgres:password@localhost:5433/medicandle?schema=public"
-NEXTAUTH_SECRET="your-secret-key-here"
-NEXTAUTH_URL="http://localhost:3000"
-```
-
-## 📝 Développement
-
-### Workflow quotidien
-
-```bash
-# 1. Démarrer la DB et le serveur
-make quick-start
-
-# 2. Travailler sur le code...
-
-# 3. Si besoin de régénérer le client Prisma
-make prisma-generate
-
-# 4. Si besoin de reset la DB
-make quick-reset
-```
-
-### Ajouter des dépendances
-
-```bash
-# Installer un package
-npm install package-name
-
-# Ajouter un composant Shadcn
-npx shadcn@latest add component-name
-```
-
-### Prisma Studio
-
-Pour visualiser et éditer la base graphiquement :
-
-```bash
-make prisma-studio
-```
-
-Ouvre automatiquement sur **http://localhost:51212**
-
-## 🚢 Déploiement
-
-```bash
-# Build de production
-make build
-
-# Démarrer en production
-make start
-```
-
-## 📄 License
-
-Private - Usage interne uniquement
+© 2025 Medicandle. Tous droits réservés.
+Projet privé - Usage interne uniquement.
