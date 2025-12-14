@@ -46,6 +46,7 @@ export default async function BackOfficePage() {
         commandesDuMois,
         recentCommandes,
         productionSettings,
+        financialTransactions,
     ] = await Promise.all([
         prisma.material.count(),
         prisma.candle.count({ where: { active: true } }),
@@ -113,13 +114,32 @@ export default async function BackOfficePage() {
                 ]
             },
             orderBy: { validFrom: 'desc' }
+        }),
+        prisma.financialTransaction.findMany({
+            where: {
+                date: {
+                    gte: startOfMonth,
+                    lte: endOfMonth
+                }
+            },
+            select: {
+                montant: true
+            }
         })
     ])
 
-    // Calculate CA du mois en cours
-    const caMoisEnCours = commandesDuMois.reduce((total, commande) => {
-        return total + (commande.montantTotalEstime || 0)
-    }, 0)
+    // Calculate Financial stats
+    const { revenueMonth, expensesMonth } = financialTransactions.reduce((acc: { revenueMonth: number; expensesMonth: number }, t) => {
+        if (t.montant > 0) acc.revenueMonth += t.montant
+        else acc.expensesMonth += t.montant
+        return acc
+    }, { revenueMonth: 0, expensesMonth: 0 })
+
+    const resultMonth = revenueMonth + expensesMonth
+
+    // Compatibility for existing UI
+    const caMoisEnCours = revenueMonth
+
 
     // Calculate dépenses (coût des matières premières en stock)
 
@@ -349,6 +369,60 @@ export default async function BackOfficePage() {
                         >
                             Voir toutes les commandes →
                         </Link>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Finances */}
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card className="border-red-200 bg-red-50/50">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-red-900">
+                            Dépenses
+                        </CardTitle>
+                        <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-red-700">
+                            {formatEuro(expensesMonth)}
+                        </div>
+                        <p className="text-xs text-red-600/80 mt-1">
+                            Transactions ce mois
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-green-200 bg-green-50/50">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-green-900">
+                            Recettes
+                        </CardTitle>
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-700">
+                            {formatEuro(revenueMonth)}
+                        </div>
+                        <p className="text-xs text-green-600/80 mt-1">
+                            Transactions ce mois
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className={resultMonth >= 0 ? "border-green-200" : "border-red-200"}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Résultat net
+                        </CardTitle>
+                        <Euro className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className={`text-2xl font-bold ${resultMonth >= 0 ? "text-green-700" : "text-red-700"}`}>
+                            {formatEuro(resultMonth)}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Recettes - Dépenses
+                        </p>
                     </CardContent>
                 </Card>
             </div>

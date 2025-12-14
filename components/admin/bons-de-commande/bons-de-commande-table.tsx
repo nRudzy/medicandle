@@ -17,16 +17,18 @@ import { BonDeCommandeStatutSelector } from "./bon-de-commande-statut-selector"
 
 const statutLabels: Record<BonDeCommandeMatieresStatut, string> = {
     BROUILLON: "Brouillon",
-    ENVOYE_FOURNISSEUR: "Envoyé au fournisseur",
+    ENVOYE: "Envoyé au fournisseur",
     RECU_PARTIEL: "Reçu partiellement",
     RECU_TOTAL: "Reçu totalement",
+    ANNULE: "Annulé",
 }
 
 const statutColors: Record<BonDeCommandeMatieresStatut, string> = {
     BROUILLON: "bg-gray-100 text-gray-800",
-    ENVOYE_FOURNISSEUR: "bg-blue-100 text-blue-800",
+    ENVOYE: "bg-blue-100 text-blue-800",
     RECU_PARTIEL: "bg-yellow-100 text-yellow-800",
     RECU_TOTAL: "bg-green-100 text-green-800",
+    ANNULE: "bg-red-100 text-red-800",
 }
 
 export function BonsDeCommandeTable({

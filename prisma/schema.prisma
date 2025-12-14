@@ -59,9 +59,41 @@ enum CommandeStatut {
 
 enum BonDeCommandeMatieresStatut {
   BROUILLON
-  ENVOYE_FOURNISSEUR
+  ENVOYE
   RECU_PARTIEL
   RECU_TOTAL
+  ANNULE
+}
+
+enum StockMovementType {
+  AJUSTEMENT_MANUEL
+  RECEPTION_APPRO
+  RESERVATION_COMMANDE
+  ANNULATION_RESERVATION
+  CONSOMMATION_COMMANDE
+  CORRECTION
+}
+
+enum StockMovementSourceType {
+  BON_COMMANDE_MATIERES
+  COMMANDE
+  MANUEL
+  AUTRE
+}
+
+enum FinancialTransactionType {
+  DEPENSE_APPRO
+  RECETTE_COMMANDE
+  DEPENSE_AUTRE
+  REMBOURSEMENT
+  AJUSTEMENT
+  DEPENSE_MATIERE_CONSOMMEE
+}
+
+enum FinancialTransactionSourceType {
+  BON_COMMANDE_MATIERES
+  COMMANDE
+  MANUEL
 }
 
 model User {
@@ -80,11 +112,7 @@ model Material {
   type            MaterialType
   costPerUnit     Float        // Cost in euros per reference unit
   unit            Unit         // Reference unit (e.g., KG)
-  quantityPerUnit Float?       // e.g., 1000 for 1KG if unit is KG? No, usually 1 unit is 1 unit. 
-                               // If user buys 1KG, cost is X. Reference unit is KG.
-                               // Maybe this field is not strictly needed if costPerUnit is clear.
-                               // User said: "quantiteParUnite (optionnel si nécessaire) ex : 1000 pour 1 kg = 1000 g."
-                               // Let's keep it optional.
+  quantityPerUnit Float?       // e.g., 1000 for 1KG if unit is KG?
   supplier        String?
   stockPhysique   Float?       // Physical stock quantity
   stockReserve    Float        @default(0) // Reserved stock for orders
@@ -95,6 +123,7 @@ model Material {
 
   candleMaterials CandleMaterial[]
   bonDeCommandeMatieresLignes BonDeCommandeMatieresLigne[]
+  stockMovements  StockMovement[]
 }
 
 model Candle {
@@ -122,8 +151,7 @@ model CandleMaterial {
   candleId    String
   materialId  String
   quantity    Float
-  unit        Unit?    // Unit used in the recipe, might differ from material reference unit? 
-                       // For simplicity, we might want to enforce conversion or just store it.
+  unit        Unit?    
   
   candle      Candle   @relation(fields: [candleId], references: [id], onDelete: Cascade)
   material    Material @relation(fields: [materialId], references: [id])
@@ -242,6 +270,8 @@ model BonDeCommandeMatieres {
   id          String                        @id @default(cuid())
   reference   String                        @unique
   dateCreation DateTime                      @default(now())
+  dateEnvoi    DateTime?
+  dateReception DateTime?
   description String?
   statut      BonDeCommandeMatieresStatut?  @default(BROUILLON)
   notes       String?
@@ -256,6 +286,8 @@ model BonDeCommandeMatieresLigne {
   bonDeCommandeMatieresId String
   matierePremiereId        String
   quantiteACommander       Float
+  quantiteRecue            Float?
+  prixUnitaireAchat        Float?
   fournisseur              String?
   notes                    String?
   createdAt                DateTime              @default(now())
@@ -272,4 +304,36 @@ model BonDeCommandeMatieresCommande {
   commande                 Commande              @relation(fields: [commandeId], references: [id], onDelete: Cascade)
 
   @@id([bonDeCommandeMatieresId, commandeId])
+}
+
+model StockMovement {
+  id               String           @id @default(cuid())
+  date             DateTime         @default(now())
+  matierePremiereId String
+  type             StockMovementType
+  quantiteDelta    Float
+  unite            Unit
+  prixUnitaire     Float?           // Prix au moment du mvt
+  valeurDelta      Float?           // Montant total associé
+  sourceType       StockMovementSourceType?
+  sourceId         String?
+  commentaire      String?
+  createdByUserId  String?
+  createdAt        DateTime         @default(now())
+
+  matierePremiere  Material         @relation(fields: [matierePremiereId], references: [id], onDelete: Cascade)
+}
+
+model FinancialTransaction {
+  id               String           @id @default(cuid())
+  date             DateTime         @default(now())
+  type             FinancialTransactionType
+  montant          Float            // Négatif pour dépenses, positif pour recettes
+  devise           String           @default("EUR")
+  description      String?
+  categorie        String?          // "Matières", "Ventes", etc.
+  sourceType       FinancialTransactionSourceType?
+  sourceId         String?
+  createdByUserId  String?
+  createdAt        DateTime         @default(now())
 }

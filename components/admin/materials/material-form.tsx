@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import { Material, MaterialType, Unit } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -54,6 +54,10 @@ export function MaterialForm({ material }: { material?: Material }) {
     }
 
     const [state, formAction, isPending] = useActionState(actionWrapper, null)
+    const [selectedUnit, setSelectedUnit] = useState<Unit | undefined>(material?.unit)
+
+    // Determine step based on unit: PIECE -> 1, Others -> 0.1
+    const stepValue = selectedUnit === "PIECE" ? "1" : "0.1"
 
     return (
         <form action={formAction}>
@@ -112,7 +116,12 @@ export function MaterialForm({ material }: { material?: Material }) {
 
                         <div className="space-y-2">
                             <Label htmlFor="unit">Unité de référence *</Label>
-                            <Select name="unit" defaultValue={material?.unit} required>
+                            <Select
+                                name="unit"
+                                defaultValue={material?.unit}
+                                required
+                                onValueChange={(val) => setSelectedUnit(val as Unit)}
+                            >
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Sélectionner une unité" />
                                 </SelectTrigger>
@@ -138,17 +147,26 @@ export function MaterialForm({ material }: { material?: Material }) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="stockPhysique">Stock physique</Label>
-                            <Input
-                                id="stockPhysique"
-                                name="stockPhysique"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                defaultValue={material?.stockPhysique || ""}
-                            />
+                            <Label htmlFor="stockPhysique">Stock actuel ({selectedUnit === 'PIECE' ? 'Pièces' : selectedUnit || 'Unité'})</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="stockPhysique"
+                                    name="stockPhysique"
+                                    type="number"
+                                    step={stepValue}
+                                    defaultValue={material?.stockPhysique ?? ""}
+                                />
+                                <div className="flex items-center text-sm text-muted-foreground bg-gray-100 px-3 rounded-md border">
+                                    {material?.unit || "Unité"}
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {material && (
+                        /* Motif selector removed as per user request - stock adjustments are now simple corrections */
+                        null
+                    )}
 
                     <div className="space-y-2">
                         <Label htmlFor="notes">Notes</Label>

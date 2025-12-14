@@ -5,7 +5,7 @@ INSERT INTO "User" (id, email, "passwordHash", role, name, "createdAt")
 VALUES (
   gen_random_uuid(),
   'admin@medicandle.com',
-  '$2a$10$rK.gZqHrJz2d9N4Y0a7n1.8qHwGkYF5IZd8hMF9AhL3K7uu8P6OFi', -- bcrypt hash of 'admin123'
+  '$2b$10$kZMHsNxKdCTYCeu1fxk.D.qsJ7EE9JrCLtUfd3Z4ZAqqXns3ZMEBC', -- bcrypt hash of 'admin123'
   'ADMIN',
   'Admin',
   NOW()
@@ -31,7 +31,7 @@ VALUES (
 );
 
 -- Insert sample materials
-INSERT INTO "Material" (id, name, type, "costPerUnit", unit, supplier, "currentStock")
+INSERT INTO "Material" (id, name, type, "costPerUnit", unit, supplier, "stockPhysique")
 VALUES
   (gen_random_uuid(), 'Cire de Soja Bio', 'WAX', 12.50, 'KG', 'Fournisseur Bio', 10.0),
   (gen_random_uuid(), 'Fragrance Bois de Santal', 'SCENT', 45.00, 'L', 'Grasse Parfums', 1.0),

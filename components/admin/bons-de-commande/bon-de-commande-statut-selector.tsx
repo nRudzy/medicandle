@@ -14,9 +14,10 @@ import { useRouter } from "next/navigation"
 
 const statutLabels: Record<BonDeCommandeMatieresStatut, string> = {
     BROUILLON: "Brouillon",
-    ENVOYE_FOURNISSEUR: "Envoyé au fournisseur",
+    ENVOYE: "Envoyé au fournisseur",
     RECU_PARTIEL: "Reçu partiellement",
     RECU_TOTAL: "Reçu totalement",
+    ANNULE: "Annulé",
 }
 
 export function BonDeCommandeStatutSelector({

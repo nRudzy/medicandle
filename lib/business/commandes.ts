@@ -233,16 +233,30 @@ export async function releaseStockForCommande(commandeId: string): Promise<void>
 /**
  * Consume stock for a commande (when production is finished)
  */
+/**
+ * Consume stock for a commande (when production is finished)
+ */
+import { createStockMovement } from "./stock"
+import { StockMovementType, StockMovementSourceType } from "@prisma/client"
+
 export async function consumeStockForCommande(commandeId: string): Promise<void> {
     const materials = await calculateMaterialsNeededForCommande(commandeId)
 
     for (const material of materials) {
+        // Create movement (updates stockPhysique)
+        await createStockMovement({
+            matierePremiereId: material.materialId,
+            type: "CONSOMMATION_COMMANDE",
+            quantiteDelta: -material.quantiteNecessaire,
+            unite: material.materialUnit,
+            sourceType: "COMMANDE",
+            sourceId: commandeId
+        })
+
+        // Decrement reserve
         await prisma.material.update({
             where: { id: material.materialId },
             data: {
-                stockPhysique: {
-                    decrement: material.quantiteNecessaire,
-                },
                 stockReserve: {
                     decrement: material.quantiteNecessaire,
                 },
