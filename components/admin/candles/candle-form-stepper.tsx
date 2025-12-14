@@ -18,6 +18,7 @@ import { createCandle, updateCandle } from "../actions"
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { MaterialCombobox } from "./material-combobox"
 
 const positioningOptions: { value: Positioning; label: string }[] = [
     { value: "ENTRY", label: "Entrée de gamme" },
@@ -415,23 +416,15 @@ export function CandleFormStepper({
                                     <div key={index} className="grid gap-3 sm:grid-cols-12 items-end">
                                         <div className="sm:col-span-5 space-y-2">
                                             <Label>Matière *</Label>
-                                            <Select
+                                            <MaterialCombobox
+                                                materials={materials}
                                                 value={rm.materialId}
-                                                onValueChange={(value) =>
+                                                onChange={(value) =>
                                                     updateMaterial(index, "materialId", value)
                                                 }
-                                            >
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Sélectionner" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {materials.map((material) => (
-                                                        <SelectItem key={material.id} value={material.id}>
-                                                            {material.name} ({materialTypeLabels[material.type]})
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                                materialTypeLabels={materialTypeLabels}
+                                                unitLabels={unitLabels}
+                                            />
                                         </div>
                                         <div className="sm:col-span-3 space-y-2">
                                             <Label>Quantité *</Label>
@@ -595,4 +588,3 @@ export function CandleFormStepper({
         </div>
     )
 }
-

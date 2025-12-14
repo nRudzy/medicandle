@@ -41,6 +41,11 @@ export default async function CommandeDetailPage({
             lignes: {
                 include: {
                     bougie: true,
+                    supplements: {
+                        include: {
+                            matierePremiere: true
+                        }
+                    }
                 },
             },
         },
@@ -66,6 +71,12 @@ export default async function CommandeDetailPage({
         return `${amount.toFixed(2)} €`
     }
 
+    const materials = await prisma.material.findMany({
+        orderBy: { name: "asc" },
+    })
+
+    const isCompleted = commande.statut === "TERMINEE"
+
     return (
         <div className="max-w-5xl space-y-6">
             <div className="flex items-center justify-between">
@@ -80,12 +91,14 @@ export default async function CommandeDetailPage({
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" asChild>
-                        <Link href={`/bo/commandes/${commande.id}/modifier`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Modifier
-                        </Link>
-                    </Button>
+                    {!isCompleted && (
+                        <Button variant="outline" asChild>
+                            <Link href={`/bo/commandes/${commande.id}/modifier`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Modifier
+                            </Link>
+                        </Button>
+                    )}
                     <Button variant="outline" asChild>
                         <Link href="/bo/commandes">
                             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -175,6 +188,7 @@ export default async function CommandeDetailPage({
                         commandeId={commande.id}
                         lignes={commande.lignes}
                         candles={candles}
+                        materials={materials}
                     />
                 </TabsContent>
 
@@ -200,4 +214,3 @@ export default async function CommandeDetailPage({
         </div>
     )
 }
-

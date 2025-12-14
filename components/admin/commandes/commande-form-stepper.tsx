@@ -14,11 +14,12 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { createCommande, addCommandeLigne } from "../actions"
+import { createCommande } from "../actions"
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import { CandleCombobox } from "./candle-combobox"
 
 type CommandeLigneData = {
     bougieId: string
@@ -109,6 +110,24 @@ export function CommandeFormStepper({
         setFormData((prev) => {
             const updated = [...prev.lignes]
             updated[index] = { ...updated[index], [field]: value }
+            return { ...prev, lignes: updated }
+        })
+    }
+
+    const handleBougieSelect = (index: number, candleId: string) => {
+        setFormData((prev) => {
+            const updated = [...prev.lignes]
+            const selectedCandle = candles.find((c) => c.id === candleId)
+            const priceValue =
+                selectedCandle?.currentPrice !== null && selectedCandle?.currentPrice !== undefined
+                    ? Number(selectedCandle.currentPrice)
+                    : ""
+
+            updated[index] = {
+                ...updated[index],
+                bougieId: candleId,
+                prixUnitaireUtilise: priceValue,
+            }
             return { ...prev, lignes: updated }
         })
     }
@@ -347,23 +366,11 @@ export function CommandeFormStepper({
                                                     <div className="grid gap-4 sm:grid-cols-2">
                                                         <div className="space-y-2">
                                                             <Label>Bougie *</Label>
-                                                            <Select
+                                                            <CandleCombobox
+                                                                candles={candles}
                                                                 value={ligne.bougieId}
-                                                                onValueChange={(value) =>
-                                                                    updateLigne(index, "bougieId", value)
-                                                                }
-                                                            >
-                                                                <SelectTrigger className="w-full">
-                                                                    <SelectValue placeholder="Sélectionner une bougie" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {candles.map((candle) => (
-                                                                        <SelectItem key={candle.id} value={candle.id}>
-                                                                            {candle.name}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
+                                                                onChange={(value) => handleBougieSelect(index, value)}
+                                                            />
                                                         </div>
 
                                                         <div className="space-y-2">
@@ -475,4 +482,3 @@ export function CommandeFormStepper({
         </div>
     )
 }
-

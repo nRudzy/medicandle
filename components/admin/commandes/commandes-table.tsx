@@ -96,6 +96,7 @@ export function CommandesTable({
                     ) : (
                         commandes.map((commande) => {
                             const isFeasible = feasibilityMap?.get(commande.id)
+                            const isCompleted = commande.statut === "TERMINEE"
                             return (
                                 <TableRow key={commande.id} className="hover:bg-[var(--medicandle-beige)]/30">
                                     <TableCell className="font-medium">{commande.reference}</TableCell>
@@ -106,10 +107,13 @@ export function CommandesTable({
                                             commandeId={commande.id}
                                             currentStatut={commande.statut}
                                             isFeasible={isFeasible}
+                                            disableEditing={isCompleted}
                                         />
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        {isFeasible === true ? (
+                                        {isCompleted ? (
+                                            <span className="text-muted-foreground font-medium">—</span>
+                                        ) : isFeasible === true ? (
                                             <div className="flex items-center justify-center gap-1 text-green-600" title="Commande réalisable">
                                                 <CheckCircle2 className="h-5 w-5" />
                                                 <span className="text-xs font-medium">Réalisable</span>
@@ -139,11 +143,13 @@ export function CommandesTable({
                                                     <Eye className="h-4 w-4" />
                                                 </Link>
                                             </Button>
-                                            <Button variant="ghost" size="icon" asChild>
-                                                <Link href={`/bo/commandes/${commande.id}/modifier`}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
+                                            {!isCompleted && (
+                                                <Button variant="ghost" size="icon" asChild>
+                                                    <Link href={`/bo/commandes/${commande.id}/modifier`}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -155,4 +161,3 @@ export function CommandesTable({
         </div>
     )
 }
-

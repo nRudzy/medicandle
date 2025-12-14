@@ -22,6 +22,12 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
+    const isProduction = process.env.NODE_ENV === "production"
+    const envLabel = isProduction ? "PRODUCTION" : "DEVELOPMENT"
+    const envClasses = isProduction
+        ? "bg-red-100 text-red-700 border border-red-200"
+        : "bg-blue-100 text-blue-700 border border-blue-200"
+
     return (
         <header className="border-b border-[var(--medicandle-beige)] bg-[var(--medicandle-ivory)] px-6 py-4">
             <div className="flex items-center justify-between">
@@ -32,22 +38,29 @@ export function Header({ user }: HeaderProps) {
                     </h2>
                 </div>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="gap-2">
-                            <User className="h-4 w-4" />
-                            {user.name || user.email}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Déconnexion
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-3">
+                    <span
+                        className={`text-xs font-semibold uppercase tracking-widest px-4 py-1 rounded-full ${envClasses}`}
+                    >
+                        {envLabel}
+                    </span>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="gap-2">
+                                <User className="h-4 w-4" />
+                                {user.name || user.email}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Déconnexion
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
         </header>
     )

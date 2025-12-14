@@ -940,18 +940,28 @@ export async function changeCommandeStatut(
                 await releaseStockForCommande(commandeId)
             }
         } else if (nouveauStatut === CommandeStatut.EN_COURS_COMMANDE) {
-            // Reserve stock when moving to EN_COURS_COMMANDE
-            if (ancienStatut === CommandeStatut.BROUILLON || ancienStatut === CommandeStatut.EN_ATTENTE_STOCK) {
+            // No stock action when just in ordering phase
+        } else if (nouveauStatut === CommandeStatut.EN_COURS_FABRICATION) {
+            // Reserve stock when production actually starts
+            if (
+                ancienStatut === CommandeStatut.BROUILLON ||
+                ancienStatut === CommandeStatut.EN_ATTENTE_STOCK ||
+                ancienStatut === CommandeStatut.EN_COURS_COMMANDE
+            ) {
                 await reserveStockForCommande(commandeId)
             }
         } else if (nouveauStatut === CommandeStatut.TERMINEE) {
             // Consume stock when production is finished
             // If stock wasn't reserved yet (e.g., from BROUILLON directly to TERMINEE), reserve it first
-            if (ancienStatut === CommandeStatut.BROUILLON || ancienStatut === CommandeStatut.EN_ATTENTE_STOCK) {
+            if (
+                ancienStatut === CommandeStatut.BROUILLON ||
+                ancienStatut === CommandeStatut.EN_ATTENTE_STOCK ||
+                ancienStatut === CommandeStatut.EN_COURS_COMMANDE
+            ) {
                 // Reserve first, then consume
                 await reserveStockForCommande(commandeId)
                 await consumeStockForCommande(commandeId)
-            } else if (ancienStatut === CommandeStatut.EN_COURS_COMMANDE || ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
+            } else if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
                 // Stock is already reserved, just consume it
                 await consumeStockForCommande(commandeId)
             }
@@ -989,6 +999,92 @@ export async function changeCommandeStatut(
 }
 
 // ==================== BONS DE COMMANDE MATIERES ====================
+
+export async function createBonDeCommandeMatieresManuel(
+    prevState: { error?: string } | null,
+    formData: FormData
+): Promise<{ error?: string } | void> {
+    try {
+        const description = (formData.get("description") as string) || ""
+        const notes = (formData.get("notes") as string) || ""
+
+        const lignes: {
+            matierePremiereId: string
+            quantite: number
+            prix?: number | null
+            fournisseur?: string | null
+            notes?: string | null
+        }[] = []
+
+        let index = 0
+        while (formData.get(`lignes[${index}].matierePremiereId`)) {
+            const matierePremiereId = formData.get(`lignes[${index}].matierePremiereId`) as string
+            const quantiteStr = formData.get(`lignes[${index}].quantite`) as string
+            const prixStr = formData.get(`lignes[${index}].prix`) as string
+            const fournisseur = formData.get(`lignes[${index}].fournisseur`) as string
+            const ligneNote = formData.get(`lignes[${index}].notes`) as string
+
+            if (!matierePremiereId) {
+                return { error: `La matière première de la ligne ${index + 1} est requise` }
+            }
+
+            const quantite = parseFloat(quantiteStr)
+            if (isNaN(quantite) || quantite <= 0) {
+                return { error: `La quantité de la ligne ${index + 1} doit être un nombre positif` }
+            }
+
+            const prix = prixStr ? parseFloat(prixStr) : null
+            if (prixStr && (isNaN(prix!) || prix! < 0)) {
+                return { error: `Le prix unitaire de la ligne ${index + 1} doit être un nombre positif` }
+            }
+
+            lignes.push({
+                matierePremiereId,
+                quantite,
+                prix,
+                fournisseur: fournisseur?.trim() ? fournisseur : null,
+                notes: ligneNote?.trim() ? ligneNote : null,
+            })
+
+            index++
+        }
+
+        if (lignes.length === 0) {
+            return { error: "Ajoutez au moins une matière première" }
+        }
+
+        const reference = await generateBonDeCommandeMatieresReference()
+
+        const bon = await prisma.bonDeCommandeMatieres.create({
+            data: {
+                reference,
+                description: description.trim() ? description : null,
+                notes: notes.trim() ? notes : null,
+                statut: BonDeCommandeMatieresStatut.BROUILLON,
+                lignes: {
+                    create: lignes.map((ligne) => ({
+                        matierePremiereId: ligne.matierePremiereId,
+                        quantiteACommander: ligne.quantite,
+                        prixUnitaireAchat: ligne.prix,
+                        fournisseur: ligne.fournisseur,
+                        notes: ligne.notes,
+                    })),
+                },
+            },
+        })
+
+        revalidatePath("/bo/bons-de-commande")
+        redirect(`/bo/bons-de-commande/${bon.id}`)
+    } catch (error: any) {
+        if (isRedirectError(error)) {
+            throw error
+        }
+        console.error("Error creating manual bon de commande:", error)
+        return {
+            error: error?.message || "Une erreur s'est produite lors de la création du bon de commande. Veuillez réessayer.",
+        }
+    }
+}
 
 export async function generateBonDeCommandeMatieres(
     commandeIds: string[]
@@ -1226,5 +1322,112 @@ export async function changeBonDeCommandeStatut(
         return {
             error: error?.message || "Une erreur s'est produite lors du changement de statut. Veuillez réessayer.",
         }
+    }
+}
+
+// ==================== MATIERES SUPPLEMENTAIRES ====================
+
+export async function addSupplementToLigne(
+    commandeLigneId: string,
+    formData: FormData
+) {
+    try {
+        const matierePremiereId = formData.get("matierePremiereId") as string
+        const modeQuantite = formData.get("modeQuantite") as "PAR_BOUGIE" | "PAR_LIGNE"
+        const quantite = parseFloat(formData.get("quantite") as string)
+        const prixUnitaireOverrideStr = formData.get("prixUnitaireOverride") as string
+        const commentaire = formData.get("commentaire") as string
+
+        if (!matierePremiereId || !modeQuantite || isNaN(quantite)) {
+            return { error: "Champs obligatoires manquants ou invalides" }
+        }
+
+        const prixUnitaireOverride = prixUnitaireOverrideStr ? parseFloat(prixUnitaireOverrideStr) : null
+
+        // Get material to infer unit if needed, although we might just use material default unit
+        // Ideally we should pass unit from form if we want flexibility, but for now let's default to material unit.
+        const material = await prisma.material.findUnique({ where: { id: matierePremiereId } })
+        if (!material) return { error: "Matière non trouvée" }
+
+        await prisma.commandeLigneMatiereSupplementaire.create({
+            data: {
+                commandeLigneId,
+                matierePremiereId,
+                modeQuantite,
+                quantite,
+                unite: material.unit, // Default to material unit
+                prixUnitaireOverride,
+                commentaire: commentaire || null
+            }
+        })
+
+        // Revalidate
+        // We need to find the commandeId to revalidate the page
+        const ligne = await prisma.commandeLigne.findUnique({
+            where: { id: commandeLigneId },
+            select: { commandeId: true }
+        })
+
+        if (ligne) {
+            revalidatePath(`/bo/commandes/${ligne.commandeId}`)
+        }
+
+    } catch (error: any) {
+        console.error("Error adding supplement:", error)
+        return { error: error?.message || "Erreur lors de l'ajout du supplément" }
+    }
+}
+
+export async function deleteSupplement(supplementId: string) {
+    try {
+        const supplement = await prisma.commandeLigneMatiereSupplementaire.findUnique({
+            where: { id: supplementId },
+            include: { commandeLigne: true }
+        })
+
+        if (!supplement) return { error: "Supplément non trouvé" }
+
+        await prisma.commandeLigneMatiereSupplementaire.delete({
+            where: { id: supplementId }
+        })
+
+        revalidatePath(`/bo/commandes/${supplement.commandeLigne.commandeId}`)
+    } catch (error: any) {
+        console.error("Error deleting supplement:", error)
+        return { error: error?.message || "Erreur lors de la suppression du supplément" }
+    }
+}
+
+export async function updateSupplement(
+    supplementId: string,
+    formData: FormData
+) {
+    try {
+        const modeQuantite = formData.get("modeQuantite") as "PAR_BOUGIE" | "PAR_LIGNE"
+        const quantite = parseFloat(formData.get("quantite") as string)
+        const prixUnitaireOverrideStr = formData.get("prixUnitaireOverride") as string
+        const commentaire = formData.get("commentaire") as string
+
+        if (!modeQuantite || isNaN(quantite)) {
+            return { error: "Champs obligatoires manquants ou invalides" }
+        }
+
+        const prixUnitaireOverride = prixUnitaireOverrideStr ? parseFloat(prixUnitaireOverrideStr) : null
+
+        const supplement = await prisma.commandeLigneMatiereSupplementaire.update({
+            where: { id: supplementId },
+            data: {
+                modeQuantite,
+                quantite,
+                prixUnitaireOverride,
+                commentaire: commentaire || null
+            },
+            include: { commandeLigne: true }
+        })
+
+        revalidatePath(`/bo/commandes/${supplement.commandeLigne.commandeId}`)
+    } catch (error: any) {
+        console.error("Error updating supplement:", error)
+        return { error: error?.message || "Erreur lors de la mise à jour du supplément" }
     }
 }

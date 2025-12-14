@@ -26,10 +26,12 @@ export function CommandeStatutSelector({
     commandeId,
     currentStatut,
     isFeasible,
+    disableEditing,
 }: {
     commandeId: string
     currentStatut: CommandeStatut
     isFeasible?: boolean | null
+    disableEditing?: boolean
 }) {
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
@@ -42,7 +44,12 @@ export function CommandeStatutSelector({
     }
 
     // Disable if commande is not feasible (unless it's already ANNULEE or LIVREE)
-    const isDisabled = isPending || (isFeasible === false && currentStatut !== CommandeStatut.ANNULEE && currentStatut !== CommandeStatut.LIVREE)
+    const isDisabled =
+        disableEditing ||
+        isPending ||
+        (isFeasible === false &&
+            currentStatut !== CommandeStatut.ANNULEE &&
+            currentStatut !== CommandeStatut.LIVREE)
 
     return (
         <div className="space-y-1">
@@ -61,4 +68,3 @@ export function CommandeStatutSelector({
         </div>
     )
 }
-

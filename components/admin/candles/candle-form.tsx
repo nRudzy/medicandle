@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createCandle } from "../actions"
 import { ArrowLeft, Plus, Trash2, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { MaterialCombobox } from "./material-combobox"
 
 const positioningOptions: { value: Positioning; label: string }[] = [
     { value: "ENTRY", label: "Entrée de gamme" },
@@ -203,25 +204,14 @@ export function CandleForm({
                                 <div key={index} className="grid gap-3 sm:grid-cols-12 items-end">
                                     <div className="sm:col-span-5 space-y-2">
                                         <Label>Matière</Label>
-                                        <Select
-                                            name={`materials[${index}].materialId`}
+                                        <MaterialCombobox
+                                            materials={materials}
                                             value={rm.materialId}
-                                            onValueChange={(value) =>
-                                                updateMaterial(index, "materialId", value)
-                                            }
-                                            required
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Sélectionner" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {materials.map((material) => (
-                                                    <SelectItem key={material.id} value={material.id}>
-                                                        {material.name} ({materialTypeLabels[material.type]})
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            onChange={(value) => updateMaterial(index, "materialId", value)}
+                                            materialTypeLabels={materialTypeLabels}
+                                            unitLabels={unitLabels}
+                                            name={`materials[${index}].materialId`}
+                                        />
                                     </div>
 
                                     <div className="sm:col-span-3 space-y-2">

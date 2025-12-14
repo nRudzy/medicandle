@@ -71,6 +71,11 @@ export async function calculateMaterialsNeededForCommande(
                             },
                         },
                     },
+                    supplements: {
+                        include: {
+                            matierePremiere: true
+                        }
+                    }
                 },
             },
         },
@@ -92,28 +97,56 @@ export async function calculateMaterialsNeededForCommande(
     for (const ligne of commande.lignes) {
         const quantiteBougies = ligne.quantite
 
+        // 1. Matériaux de la recette (Bougie)
         for (const candleMaterial of ligne.bougie.materials) {
             const material = candleMaterial.material
             const recipeUnit = candleMaterial.unit || material.unit
             const recipeQuantity = candleMaterial.quantity
 
             // Convert recipe quantity to base unit
-            const baseQuantity = convertToBaseUnit(recipeQuantity, recipeUnit)
+            const quantityBase = convertToBaseUnit(recipeQuantity, recipeUnit)
+            const totalQuantityBase = quantityBase * quantiteBougies
 
-            // Total needed for all candles of this type
-            const totalBaseNeeded = baseQuantity * quantiteBougies
-
-            const key = material.id
-            if (materialsMap.has(key)) {
-                const existing = materialsMap.get(key)!
-                existing.totalNeededBase += totalBaseNeeded
+            const existing = materialsMap.get(material.id)
+            if (existing) {
+                existing.totalNeededBase += totalQuantityBase
             } else {
-                materialsMap.set(key, {
+                materialsMap.set(material.id, {
                     materialId: material.id,
                     materialName: material.name,
                     materialType: material.type,
                     materialUnit: material.unit,
-                    totalNeededBase: totalBaseNeeded,
+                    totalNeededBase: totalQuantityBase,
+                })
+            }
+        }
+
+        // 2. Suppléments (Nouveau)
+        for (const supplement of ligne.supplements) {
+            const material = supplement.matierePremiere
+            const suppUnit = supplement.unite || material.unit // Default to material unit if not specified
+            const suppQuantity = supplement.quantite // Quantity per Unit or per Line
+
+            let totalSupplementQuantity = 0
+            if (supplement.modeQuantite === "PAR_BOUGIE") {
+                totalSupplementQuantity = suppQuantity * quantiteBougies
+            } else { // PAR_LIGNE
+                totalSupplementQuantity = suppQuantity
+            }
+
+            // Convert to base unit
+            const quantityBase = convertToBaseUnit(totalSupplementQuantity, suppUnit)
+
+            const existing = materialsMap.get(material.id)
+            if (existing) {
+                existing.totalNeededBase += quantityBase
+            } else {
+                materialsMap.set(material.id, {
+                    materialId: material.id,
+                    materialName: material.name,
+                    materialType: material.type,
+                    materialUnit: material.unit,
+                    totalNeededBase: quantityBase,
                 })
             }
         }
