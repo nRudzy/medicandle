@@ -74,7 +74,7 @@ export function MaterialCombobox({
                         <CommandList>
                             <CommandEmpty>Aucune matière trouvée.</CommandEmpty>
                             <CommandGroup>
-                                {materials.map((material) => {
+                            {materials.map((material) => {
                                     const supplierLabel = material.supplier
                                         ? ` - ${material.supplier}`
                                         : ""
@@ -84,7 +84,7 @@ export function MaterialCombobox({
                                     return (
                                         <CommandItem
                                             key={material.id}
-                                            value={`${material.name} ${material.supplier || ""}`.trim()}
+                                            value={`${material.id}-${material.name}-${material.supplier || ""}`}
                                             onSelect={() => {
                                                 onChange(material.id)
                                                 setOpen(false)

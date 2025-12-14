@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CommandeLigne, Material } from "@/lib/types"
+import { CommandeLigne, Material, MaterialType, Unit } from "@/lib/types"
 import { CommandeLigneMatiereSupplementaire } from "@prisma/client"
 import {
     Dialog,
@@ -15,18 +15,31 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Trash2, PackagePlus, Edit2, Check, X } from "lucide-react"
 import { addSupplementToLigne, deleteSupplement, updateSupplement } from "@/components/admin/actions"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
+import { MaterialCombobox } from "@/components/admin/candles/material-combobox"
+
+const materialTypeLabels: Record<MaterialType, string> = {
+    WAX: "Cire",
+    SCENT: "Parfum",
+    WICK: "Mèche",
+    CONTAINER: "Contenant",
+    DYE: "Colorant",
+    ACCESSORY: "Accessoire",
+    PACKAGING: "Emballage",
+    OTHER: "Autre",
+}
+
+const unitLabels: Record<Unit, string> = {
+    G: "g",
+    KG: "kg",
+    ML: "ml",
+    L: "L",
+    PIECE: "pièce",
+}
 
 // Extended type for line with supplements
 type CommandeLigneWithSupplements = CommandeLigne & {
@@ -211,22 +224,15 @@ export function CommandeLigneSupplementsDialog({
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label className="text-xs">Matière Première</Label>
-                                <Select
+                                <MaterialCombobox
+                                    materials={materials}
                                     value={supplementForm.matierePremiereId}
-                                    onValueChange={(v) => setSupplementForm({ ...supplementForm, matierePremiereId: v })}
-                                    disabled={isEditing} // Prevent changing material in edit mode for simplicity
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Choisir..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {materials.map((m) => (
-                                            <SelectItem key={m.id} value={m.id}>
-                                                {m.name} ({m.unit})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    onChange={(v) => setSupplementForm({ ...supplementForm, matierePremiereId: v })}
+                                    materialTypeLabels={materialTypeLabels}
+                                    unitLabels={unitLabels}
+                                    placeholder="Choisir..."
+                                    name="supplementMaterial"
+                                />
                             </div>
 
                             <div className="space-y-1">
