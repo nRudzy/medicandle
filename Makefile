@@ -1,4 +1,4 @@
-.PHONY: help install db-start db-stop db-reset setup dev clean prisma-generate prisma-migrate prisma-seed prisma-studio
+.PHONY: help install db-start db-stop db-reset setup dev clean prisma-generate prisma-migrate prisma-seed prisma-studio restart status logs quick-start quick-reset pre-deploy build build-check start lint
 
 # Variables
 DOCKER_COMPOSE = docker-compose
@@ -76,14 +76,9 @@ setup: install db-start prisma-generate prisma-migrate prisma-seed ## Setup comp
 	@echo "👤 Utilisateur admin: admin@medicandle.com / admin123"
 	@echo "📝 Prêt à démarrer avec: make dev"
 
-dev: ## Lancer le serveur de développement
-	@echo "🚀 Démarrage du serveur Next.js..."
-	@echo "💡 Si le HMR ne fonctionne pas, essayez: make dev-webpack"
+dev: ## Lancer le serveur de développement (Turbopack)
+	@echo "🚀 Démarrage du serveur Next.js (Turbopack)..."
 	$(NPM) run dev
-
-dev-webpack: ## Lancer le serveur avec webpack (meilleur HMR pour WSL2)
-	@echo "🚀 Démarrage du serveur Next.js avec webpack (polling activé)..."
-	$(NPM) run dev:webpack
 
 build: ## Build pour la production
 	@echo "📦 Build de l'application..."
@@ -141,7 +136,7 @@ pre-deploy: ## Vérifications avant déploiement
 	@$(PRISMA) generate > /dev/null 2>&1 && echo "✅ Prisma Client OK" || (echo "❌ Erreur Prisma Client" && exit 1)
 	@echo ""
 	@echo "3️⃣  Vérification du linter..."
-	@$(NPM) run lint > /dev/null 2>&1 && echo "✅ Lint OK" || echo "⚠️  Warnings de lint détectés"
+	@$(NPM) run lint > /dev/null 2>&1 && echo "✅ Lint OK" || (echo "❌ Erreur Lint" && exit 1)
 	@echo ""
 	@echo "✅ Toutes les vérifications sont passées!"
 	@echo "💡 Vous pouvez maintenant déployer en toute sécurité:"

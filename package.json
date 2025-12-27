@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "dev:webpack": "next dev --webpack",
-    "dev:turbo": "next dev --turbo",
     "build": "npx prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
