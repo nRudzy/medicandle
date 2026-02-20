@@ -4,8 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CommandeStatutSelector } from "@/components/admin/commandes/commande-statut-selector"
 import { CommandeLignesEditor } from "@/components/admin/commandes/commande-lignes-editor"
-import { CommandeFeasibilityAnalysis } from "@/components/admin/commandes/commande-feasibility-analysis"
-import { analyzeCommandeFeasibility, generateBonDeCommandeMatieres } from "@/components/admin/actions"
+import { generateBonDeCommandeMatieres } from "@/components/admin/actions"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Edit } from "lucide-react"
@@ -60,8 +59,6 @@ export default async function CommandeDetailPage({
         orderBy: { name: "asc" },
     })
 
-    const feasibility = await analyzeCommandeFeasibility(id)
-
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString("fr-FR")
     }
@@ -112,7 +109,6 @@ export default async function CommandeDetailPage({
                 <TabsList>
                     <TabsTrigger value="infos">Informations</TabsTrigger>
                     <TabsTrigger value="lignes">Lignes de commande</TabsTrigger>
-                    <TabsTrigger value="analyse">Analyse stock</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="infos" className="space-y-4">
@@ -130,7 +126,6 @@ export default async function CommandeDetailPage({
                                         <CommandeStatutSelector
                                             commandeId={commande.id}
                                             currentStatut={commande.statut}
-                                            isFeasible={feasibility.isFeasible}
                                         />
                                     </div>
                                 </div>
@@ -184,25 +179,25 @@ export default async function CommandeDetailPage({
                 </TabsContent>
 
                 <TabsContent value="lignes" className="space-y-4">
-                    <CommandeLignesEditor
-                        commandeId={commande.id}
-                        lignes={commande.lignes}
-                        candles={candles}
-                        materials={materials}
-                    />
-                </TabsContent>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Contenu de la commande</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <CommandeLignesEditor
+                                commandeId={commande.id}
+                                lignes={commande.lignes}
+                                candles={candles}
+                                materials={materials}
+                            />
+                        </CardContent>
+                    </Card>
 
-                <TabsContent value="analyse" className="space-y-4">
-                    <CommandeFeasibilityAnalysis
-                        isFeasible={feasibility.isFeasible}
-                        materials={feasibility.materials}
-                        missingMaterials={feasibility.missingMaterials}
-                    />
-
-                    {!feasibility.isFeasible && (
+                    {!isCompleted && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>Actions</CardTitle>
+                                <CardTitle>Approvisionnement</CardTitle>
+                                <CardDescription>Générer un bon de commande pour les matières manquantes</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <GenerateBonDeCommandeButton commandeId={id} />

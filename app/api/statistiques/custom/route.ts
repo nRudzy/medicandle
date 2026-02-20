@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         }
 
         const where: any = {
-            statut: { in: [CommandeStatut.TERMINEE, CommandeStatut.LIVREE] },
+            statut: CommandeStatut.TERMINEE,
         }
 
         if (periodDates.dateFrom || periodDates.dateTo) {

@@ -41,7 +41,6 @@ export default async function BackOfficePage() {
         candlesCount,
         clientsCount,
         commandesEnCours,
-        commandesEnAttenteStock,
         commandesTermineesCeMois,
         commandesDuMois,
         recentCommandes,
@@ -53,14 +52,7 @@ export default async function BackOfficePage() {
         prisma.client.count(),
         prisma.commande.count({
             where: {
-                statut: {
-                    in: [CommandeStatut.EN_COURS_COMMANDE, CommandeStatut.EN_COURS_FABRICATION]
-                }
-            }
-        }),
-        prisma.commande.count({
-            where: {
-                statut: CommandeStatut.EN_ATTENTE_STOCK
+                statut: CommandeStatut.EN_COURS_FABRICATION
             }
         }),
         prisma.commande.count({
@@ -86,7 +78,7 @@ export default async function BackOfficePage() {
         prisma.commande.findMany({
             where: {
                 statut: {
-                    in: [CommandeStatut.BROUILLON, CommandeStatut.EN_ATTENTE_STOCK, CommandeStatut.EN_COURS_COMMANDE, CommandeStatut.EN_COURS_FABRICATION]
+                    in: [CommandeStatut.BROUILLON, CommandeStatut.EN_COURS_FABRICATION]
                 }
             },
             take: 5,
@@ -151,9 +143,7 @@ export default async function BackOfficePage() {
     // Calculate dépenses de production estimées pour les commandes en cours
     const commandesAvecDetails = await prisma.commande.findMany({
         where: {
-            statut: {
-                in: [CommandeStatut.EN_COURS_COMMANDE, CommandeStatut.EN_COURS_FABRICATION]
-            }
+            statut: CommandeStatut.EN_COURS_FABRICATION
         },
         include: {
             lignes: {
@@ -221,11 +211,8 @@ export default async function BackOfficePage() {
 
     const statutLabels: Record<CommandeStatut, string> = {
         BROUILLON: "Brouillon",
-        EN_ATTENTE_STOCK: "En attente",
-        EN_COURS_COMMANDE: "En commande",
-        EN_COURS_FABRICATION: "En fabrication",
+        EN_COURS_FABRICATION: "En cours",
         TERMINEE: "Terminée",
-        LIVREE: "Livrée",
         ANNULEE: "Annulée",
     }
 
@@ -318,30 +305,7 @@ export default async function BackOfficePage() {
                             En cours de commande ou fabrication
                         </p>
                         <Link
-                            href="/bo/commandes?statut=EN_COURS_COMMANDE,EN_COURS_FABRICATION"
-                            className="text-xs text-[var(--medicandle-sage)] hover:underline mt-2 inline-block"
-                        >
-                            Voir les commandes →
-                        </Link>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-[var(--medicandle-sage)]/20">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            En attente de stock
-                        </CardTitle>
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-[var(--medicandle-dark-brown)]">
-                            {commandesEnAttenteStock}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Commandes en attente
-                        </p>
-                        <Link
-                            href="/bo/bons-de-commande"
+                            href="/bo/commandes?statut=EN_COURS_FABRICATION"
                             className="text-xs text-[var(--medicandle-sage)] hover:underline mt-2 inline-block"
                         >
                             Voir les commandes →
@@ -361,7 +325,7 @@ export default async function BackOfficePage() {
                             {formatEuro(caMoisEnCours)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Chiffre d'affaires estimé
+                            Recettes cumulées ce mois
                         </p>
                         <Link
                             href="/bo/commandes"
@@ -467,7 +431,7 @@ export default async function BackOfficePage() {
                             Pour les commandes en cours
                         </p>
                         <Link
-                            href="/bo/commandes?statut=EN_COURS_COMMANDE,EN_COURS_FABRICATION"
+                            href="/bo/commandes?statut=EN_COURS_FABRICATION"
                             className="text-xs text-[var(--medicandle-brown)] hover:underline mt-2 inline-block"
                         >
                             Voir les commandes →

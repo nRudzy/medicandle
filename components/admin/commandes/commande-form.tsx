@@ -25,20 +25,18 @@ type ClientType = any
 export function CommandeForm({
     commande,
     clients,
-    isFeasible,
 }: {
     commande?: CommandeType
     clients: ClientType[]
-    isFeasible?: boolean | null
 }) {
     const isEditMode = !!commande
     const [clientId, setClientId] = useState(commande?.clientId || "none")
-    
+
     // Use separate actions based on mode
     const [state, formAction] = useActionState(
         isEditMode && commande
             ? (prevState: any, formData: FormData) =>
-                  updateCommande(commande.id, prevState, formData)
+                updateCommande(commande.id, prevState, formData)
             : (prevState: any, formData: FormData) => createCommande(prevState, formData),
         null
     )
@@ -101,7 +99,6 @@ export function CommandeForm({
                             <CommandeStatutSelector
                                 commandeId={commande.id}
                                 currentStatut={commande.statut}
-                                isFeasible={isFeasible}
                             />
                         </div>
                     )}
@@ -130,8 +127,8 @@ export function CommandeForm({
                                 defaultValue={
                                     commande?.dateLivraisonSouhaitee
                                         ? new Date(commande.dateLivraisonSouhaitee)
-                                              .toISOString()
-                                              .split("T")[0]
+                                            .toISOString()
+                                            .split("T")[0]
                                         : ""
                                 }
                             />

@@ -29,30 +29,22 @@ type CommandeWithClient = Commande & {
 
 const statutLabels: Record<CommandeStatut, string> = {
     BROUILLON: "Brouillon",
-    EN_ATTENTE_STOCK: "En attente de stock",
-    EN_COURS_COMMANDE: "En cours de commande",
-    EN_COURS_FABRICATION: "En cours de fabrication",
+    EN_COURS_FABRICATION: "En cours",
     TERMINEE: "Terminée",
-    LIVREE: "Livrée",
     ANNULEE: "Annulée",
 }
 
 const statutColors: Record<CommandeStatut, string> = {
     BROUILLON: "bg-gray-100 text-gray-800",
-    EN_ATTENTE_STOCK: "bg-yellow-100 text-yellow-800",
-    EN_COURS_COMMANDE: "bg-blue-100 text-blue-800",
-    EN_COURS_FABRICATION: "bg-purple-100 text-purple-800",
+    EN_COURS_FABRICATION: "bg-blue-100 text-blue-800",
     TERMINEE: "bg-green-100 text-green-800",
-    LIVREE: "bg-emerald-100 text-emerald-800",
     ANNULEE: "bg-red-100 text-red-800",
 }
 
 export function CommandesTable({
     commandes,
-    feasibilityMap,
 }: {
     commandes: CommandeWithClient[]
-    feasibilityMap?: Map<string, boolean | null>
 }) {
     const formatEuro = (amount: number | null) => {
         if (amount === null) return "—"
@@ -80,7 +72,6 @@ export function CommandesTable({
                         <TableHead className="text-[var(--medicandle-dark-brown)]">Client</TableHead>
                         <TableHead className="text-[var(--medicandle-dark-brown)]">Date commande</TableHead>
                         <TableHead className="text-[var(--medicandle-dark-brown)]">Statut</TableHead>
-                        <TableHead className="text-center text-[var(--medicandle-dark-brown)]">Faisabilité</TableHead>
                         <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Nb bougies</TableHead>
                         <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Montant estimé</TableHead>
                         <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Actions</TableHead>
@@ -89,13 +80,12 @@ export function CommandesTable({
                 <TableBody>
                     {commandes.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                 Aucune commande enregistrée
                             </TableCell>
                         </TableRow>
                     ) : (
                         commandes.map((commande) => {
-                            const isFeasible = feasibilityMap?.get(commande.id)
                             const isCompleted = commande.statut === "TERMINEE"
                             return (
                                 <TableRow key={commande.id} className="hover:bg-[var(--medicandle-beige)]/30">
@@ -106,29 +96,8 @@ export function CommandesTable({
                                         <CommandeStatutSelector
                                             commandeId={commande.id}
                                             currentStatut={commande.statut}
-                                            isFeasible={isFeasible}
                                             disableEditing={isCompleted}
                                         />
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        {isCompleted ? (
-                                            <span className="text-muted-foreground font-medium">—</span>
-                                        ) : isFeasible === true ? (
-                                            <div className="flex items-center justify-center gap-1 text-green-600" title="Commande réalisable">
-                                                <CheckCircle2 className="h-5 w-5" />
-                                                <span className="text-xs font-medium">Réalisable</span>
-                                            </div>
-                                        ) : isFeasible === false ? (
-                                            <div className="flex items-center justify-center gap-1 text-red-600" title="Commande non réalisable - stock insuffisant">
-                                                <XCircle className="h-5 w-5" />
-                                                <span className="text-xs font-medium">Non réalisable</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-center gap-1 text-gray-400" title="Faisabilité non déterminée">
-                                                <AlertCircle className="h-5 w-5" />
-                                                <span className="text-xs">—</span>
-                                            </div>
-                                        )}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {commande.lignes.reduce((sum, ligne) => sum + ligne.quantite, 0)}

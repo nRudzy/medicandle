@@ -168,11 +168,8 @@ function calculateLigneMontant(ligne: any, bougie: any): number {
     return prixFinal * ligne.quantite
 }
 
-/**
- * Calculate CA réalisé (commandes TERMINEE ou LIVREE)
- */
 export async function calculateCARealise(filters: StatistiquesFilters): Promise<number> {
-    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE, CommandeStatut.LIVREE])
+    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE])
 
     const commandes = await prisma.commande.findMany({
         where,
@@ -200,8 +197,6 @@ export async function calculateCARealise(filters: StatistiquesFilters): Promise<
  */
 export async function calculateCAPipeline(filters: StatistiquesFilters): Promise<number> {
     const where = buildCommandeWhere(filters, [
-        CommandeStatut.EN_ATTENTE_STOCK,
-        CommandeStatut.EN_COURS_COMMANDE,
         CommandeStatut.EN_COURS_FABRICATION,
     ])
 
@@ -265,11 +260,8 @@ export async function calculateCAPrevisionnel(): Promise<CAPrevisionnel> {
     }
 }
 
-/**
- * Calculate realized margin
- */
 export async function calculateMargeRealisee(filters: StatistiquesFilters): Promise<number> {
-    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE, CommandeStatut.LIVREE])
+    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE])
 
     const commandes = await prisma.commande.findMany({
         where,
@@ -323,16 +315,16 @@ export async function calculateMargeRealisee(filters: StatistiquesFilters): Prom
 
             const productionCost = ligne.bougie.productionParams
                 ? calculateProductionCost(
-                      {
-                          prepTimeMinutes: ligne.bougie.productionParams.prepTimeMinutes,
-                          heatingTimeMinutes: ligne.bougie.productionParams.heatingTimeMinutes || undefined,
-                      },
-                      {
-                          laborRate: productionSettings.laborRate,
-                          electricityCost: productionSettings.electricityCost,
-                          amortizationCost: productionSettings.amortizationCost,
-                      }
-                  )
+                    {
+                        prepTimeMinutes: ligne.bougie.productionParams.prepTimeMinutes,
+                        heatingTimeMinutes: ligne.bougie.productionParams.heatingTimeMinutes || undefined,
+                    },
+                    {
+                        laborRate: productionSettings.laborRate,
+                        electricityCost: productionSettings.electricityCost,
+                        amortizationCost: productionSettings.amortizationCost,
+                    }
+                )
                 : 0
 
             const coutParBougie = materialCost + productionCost
@@ -343,11 +335,8 @@ export async function calculateMargeRealisee(filters: StatistiquesFilters): Prom
     return totalCA - totalCout
 }
 
-/**
- * Get top bougies by volume
- */
 export async function getTopBougiesByVolume(filters: StatistiquesFilters): Promise<TopBougie[]> {
-    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE, CommandeStatut.LIVREE])
+    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE])
 
     const commandes = await prisma.commande.findMany({
         where,
@@ -412,16 +401,16 @@ export async function getTopBougiesByVolume(filters: StatistiquesFilters): Promi
 
             const productionCost = ligne.bougie.productionParams && productionSettings
                 ? calculateProductionCost(
-                      {
-                          prepTimeMinutes: ligne.bougie.productionParams.prepTimeMinutes,
-                          heatingTimeMinutes: ligne.bougie.productionParams.heatingTimeMinutes || undefined,
-                      },
-                      {
-                          laborRate: productionSettings.laborRate,
-                          electricityCost: productionSettings.electricityCost,
-                          amortizationCost: productionSettings.amortizationCost,
-                      }
-                  )
+                    {
+                        prepTimeMinutes: ligne.bougie.productionParams.prepTimeMinutes,
+                        heatingTimeMinutes: ligne.bougie.productionParams.heatingTimeMinutes || undefined,
+                    },
+                    {
+                        laborRate: productionSettings.laborRate,
+                        electricityCost: productionSettings.electricityCost,
+                        amortizationCost: productionSettings.amortizationCost,
+                    }
+                )
                 : 0
 
             const coutParBougie = materialCost + productionCost
@@ -451,24 +440,21 @@ export async function getTopBougiesByMarge(filters: StatistiquesFilters): Promis
  */
 export async function getBougiesFaibles(filters: StatistiquesFilters): Promise<TopBougie[]> {
     const allBougies = await getTopBougiesByVolume(filters)
-    
+
     // Filter: low volume (below median) AND low margin (below median)
     const volumes = allBougies.map(b => b.quantiteVendue).sort((a, b) => a - b)
     const marges = allBougies.map(b => b.margeTotale).sort((a, b) => a - b)
-    
+
     const medianVolume = volumes[Math.floor(volumes.length / 2)] || 0
     const medianMarge = marges[Math.floor(marges.length / 2)] || 0
-    
+
     return allBougies.filter(
         b => b.quantiteVendue < medianVolume && b.margeTotale < medianMarge
     ).sort((a, b) => a.quantiteVendue - b.quantiteVendue)
 }
 
-/**
- * Get top clients
- */
 export async function getTopClients(filters: StatistiquesFilters): Promise<TopClient[]> {
-    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE, CommandeStatut.LIVREE])
+    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE])
 
     const commandes = await prisma.commande.findMany({
         where,
@@ -517,11 +503,8 @@ export async function getTopClients(filters: StatistiquesFilters): Promise<TopCl
     return Array.from(clientsMap.values()).sort((a, b) => b.caCumule - a.caCumule)
 }
 
-/**
- * Get client statistics
- */
 export async function getClientStats(filters: StatistiquesFilters): Promise<ClientStats> {
-    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE, CommandeStatut.LIVREE])
+    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE])
 
     const commandes = await prisma.commande.findMany({
         where,
@@ -544,7 +527,7 @@ export async function getClientStats(filters: StatistiquesFilters): Promise<Clie
     // Clients inactifs (no command in last 3 months)
     const threeMonthsAgo = new Date()
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
-    
+
     const recentCommandes = commandes.filter(c => c.dateCommande >= threeMonthsAgo)
     const recentClients = new Set(recentCommandes.map(c => c.clientId).filter(Boolean))
     const allClients = await prisma.client.findMany({ select: { id: true } })
@@ -655,8 +638,8 @@ export async function calculateCAByTimeUnit(
 ): Promise<CAByTime[]> {
     const statuts =
         type === "realise"
-            ? [CommandeStatut.TERMINEE, CommandeStatut.LIVREE]
-            : [CommandeStatut.EN_ATTENTE_STOCK, CommandeStatut.EN_COURS_COMMANDE, CommandeStatut.EN_COURS_FABRICATION]
+            ? [CommandeStatut.TERMINEE]
+            : [CommandeStatut.EN_COURS_FABRICATION]
 
     const where = buildCommandeWhere(filters, statuts)
 
@@ -706,11 +689,8 @@ export async function calculateCAByTimeUnit(
         .sort((a, b) => a.date.localeCompare(b.date))
 }
 
-/**
- * Get counts (commandes and bougies)
- */
 export async function getStatsCounts(filters: StatistiquesFilters): Promise<StatsCounts> {
-    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE, CommandeStatut.LIVREE])
+    const where = buildCommandeWhere(filters, [CommandeStatut.TERMINEE])
 
     const [nbCommandes, commandes] = await Promise.all([
         prisma.commande.count({ where }),

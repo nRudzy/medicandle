@@ -49,11 +49,8 @@ enum ClientType {
 
 enum CommandeStatut {
   BROUILLON
-  EN_ATTENTE_STOCK
-  EN_COURS_COMMANDE
   EN_COURS_FABRICATION
   TERMINEE
-  LIVREE
   ANNULEE
 }
 

@@ -23,31 +23,14 @@ const unitLabels: Record<Unit, string> = {
 }
 
 export function CommandeFeasibilityAnalysis({
-    isFeasible,
     materials,
     missingMaterials,
 }: {
-    isFeasible: boolean
     materials: MaterialNeeded[]
     missingMaterials: MaterialNeeded[]
 }) {
     return (
         <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    Analyse de faisabilité
-                    {isFeasible ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    ) : (
-                        <XCircle className="h-5 w-5 text-red-600" />
-                    )}
-                </CardTitle>
-                <CardDescription>
-                    {isFeasible
-                        ? "Cette commande est faisable immédiatement avec le stock actuel."
-                        : "Cette commande n'est pas faisable immédiatement. Il manque des matières premières."}
-                </CardDescription>
-            </CardHeader>
             <CardContent>
                 <div className="rounded-md border border-[var(--medicandle-beige)] bg-[var(--medicandle-ivory)]">
                     <Table>

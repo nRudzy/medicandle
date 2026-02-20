@@ -190,50 +190,13 @@ export async function calculateMaterialsNeededForCommande(
 }
 
 /**
- * Check if a commande is feasible with current stock
- */
-export async function checkCommandeFeasibility(commandeId: string): Promise<{
-    isFeasible: boolean
-    materials: MaterialNeeded[]
-    missingMaterials: MaterialNeeded[]
-}> {
-    const materials = await calculateMaterialsNeededForCommande(commandeId)
-    const missingMaterials = materials.filter((m) => m.manque > 0)
-    const isFeasible = missingMaterials.length === 0
-
-    return {
-        isFeasible,
-        materials,
-        missingMaterials,
-    }
-}
-
-/**
  * Reserve stock for a commande
  */
 export async function reserveStockForCommande(commandeId: string): Promise<void> {
     const materials = await calculateMaterialsNeededForCommande(commandeId)
 
     for (const material of materials) {
-        // Convert needed quantity to base unit for calculation
-        const neededBase = convertToBaseUnit(material.quantiteNecessaire, material.materialUnit)
-
-        // Get current material to check stock
-        const currentMaterial = await prisma.material.findUnique({
-            where: { id: material.materialId },
-        })
-
-        if (!currentMaterial) continue
-
-        const stockDisponible = (currentMaterial.stockPhysique || 0) - (currentMaterial.stockReserve || 0)
-
-        if (stockDisponible < material.quantiteNecessaire) {
-            throw new Error(
-                `Stock insuffisant pour ${material.materialName}. Disponible: ${stockDisponible}, Nécessaire: ${material.quantiteNecessaire}`
-            )
-        }
-
-        // Update stockReserve
+        // Update stockReserve regardless of availability (non-blocking)
         await prisma.material.update({
             where: { id: material.materialId },
             data: {

@@ -18,11 +18,8 @@ import { X } from "lucide-react"
 
 const statutLabels: Record<CommandeStatut, string> = {
     BROUILLON: "Brouillon",
-    EN_ATTENTE_STOCK: "En attente de stock",
-    EN_COURS_COMMANDE: "En cours de commande",
-    EN_COURS_FABRICATION: "En cours de fabrication",
+    EN_COURS_FABRICATION: "En cours",
     TERMINEE: "Terminée",
-    LIVREE: "Livrée",
     ANNULEE: "Annulée",
 }
 
@@ -40,9 +37,6 @@ export function CommandesFilters() {
     const [dateTo, setDateTo] = useState(
         searchParams.get("dateTo") || ""
     )
-    const [faisable, setFaisable] = useState<string>(
-        searchParams.get("faisable") || "all"
-    )
 
     const applyFilters = () => {
         startTransition(() => {
@@ -56,9 +50,6 @@ export function CommandesFilters() {
             if (dateTo) {
                 params.set("dateTo", dateTo)
             }
-            if (faisable && faisable !== "all") {
-                params.set("faisable", faisable)
-            }
             router.push(`/bo/commandes?${params.toString()}`)
         })
     }
@@ -67,7 +58,6 @@ export function CommandesFilters() {
         setStatut([])
         setDateFrom("")
         setDateTo("")
-        setFaisable("all")
         startTransition(() => {
             router.push("/bo/commandes")
         })
@@ -81,7 +71,7 @@ export function CommandesFilters() {
         )
     }
 
-    const hasActiveFilters = statut.length > 0 || dateFrom || dateTo || (faisable && faisable !== "all")
+    const hasActiveFilters = statut.length > 0 || dateFrom || dateTo
 
     return (
         <Card>
@@ -102,7 +92,7 @@ export function CommandesFilters() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div className="space-y-2">
                         <Label>Statut</Label>
                         <div className="flex flex-wrap gap-2">
@@ -119,19 +109,6 @@ export function CommandesFilters() {
                                 </Button>
                             ))}
                         </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="faisable">Faisabilité</Label>
-                        <Select value={faisable} onValueChange={setFaisable} disabled={isPending}>
-                            <SelectTrigger id="faisable" className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Toutes</SelectItem>
-                                <SelectItem value="true">Réalisables</SelectItem>
-                                <SelectItem value="false">Non réalisables</SelectItem>
-                            </SelectContent>
-                        </Select>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dateFrom">Date de début</Label>

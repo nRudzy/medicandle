@@ -9,7 +9,6 @@ import {
     reserveStockForCommande,
     releaseStockForCommande,
     consumeStockForCommande,
-    checkCommandeFeasibility,
     calculateMaterialsNeededForCommande,
 } from "@/lib/business/commandes"
 import { createStockMovement, createFinancialTransaction } from "@/lib/business/stock"
@@ -746,7 +745,7 @@ export async function deleteCommande(id: string) {
             where: { id },
         })
 
-        if (commande && (commande.statut === CommandeStatut.EN_COURS_COMMANDE || commande.statut === CommandeStatut.EN_COURS_FABRICATION)) {
+        if (commande && commande.statut === CommandeStatut.EN_COURS_FABRICATION) {
             await releaseStockForCommande(id)
         }
 
@@ -909,14 +908,6 @@ async function recalculateCommandeTotal(commandeId: string) {
     })
 }
 
-export async function analyzeCommandeFeasibility(commandeId: string) {
-    try {
-        return await checkCommandeFeasibility(commandeId)
-    } catch (error: any) {
-        console.error("Error analyzing commande feasibility:", error)
-        throw error
-    }
-}
 
 export async function changeCommandeStatut(
     commandeId: string,
@@ -935,34 +926,18 @@ export async function changeCommandeStatut(
 
         // Workflow logic
         if (nouveauStatut === CommandeStatut.ANNULEE) {
-            // Release reserved stock if any
-            if (ancienStatut === CommandeStatut.EN_COURS_COMMANDE || ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
+            // Release reserved stock if it was in EN_COURS_FABRICATION
+            if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
                 await releaseStockForCommande(commandeId)
             }
-        } else if (nouveauStatut === CommandeStatut.EN_COURS_COMMANDE) {
-            // No stock action when just in ordering phase
         } else if (nouveauStatut === CommandeStatut.EN_COURS_FABRICATION) {
-            // Reserve stock when production actually starts
-            if (
-                ancienStatut === CommandeStatut.BROUILLON ||
-                ancienStatut === CommandeStatut.EN_ATTENTE_STOCK ||
-                ancienStatut === CommandeStatut.EN_COURS_COMMANDE
-            ) {
+            // Reserve stock when moving from BROUILLON to EN_COURS_FABRICATION
+            if (ancienStatut === CommandeStatut.BROUILLON) {
                 await reserveStockForCommande(commandeId)
             }
         } else if (nouveauStatut === CommandeStatut.TERMINEE) {
-            // Consume stock when production is finished
-            // If stock wasn't reserved yet (e.g., from BROUILLON directly to TERMINEE), reserve it first
-            if (
-                ancienStatut === CommandeStatut.BROUILLON ||
-                ancienStatut === CommandeStatut.EN_ATTENTE_STOCK ||
-                ancienStatut === CommandeStatut.EN_COURS_COMMANDE
-            ) {
-                // Reserve first, then consume
-                await reserveStockForCommande(commandeId)
-                await consumeStockForCommande(commandeId)
-            } else if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
-                // Stock is already reserved, just consume it
+            // Consume stock only when moving from EN_COURS_FABRICATION to TERMINEE
+            if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
                 await consumeStockForCommande(commandeId)
             }
 
@@ -977,8 +952,6 @@ export async function changeCommandeStatut(
                     sourceId: commande.id
                 })
             }
-
-            // Note: If coming from LIVREE or ANNULEE, we don't consume (shouldn't happen in normal workflow)
         }
 
         await prisma.commande.update({

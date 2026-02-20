@@ -14,23 +14,18 @@ import { useRouter } from "next/navigation"
 
 const statutLabels: Record<CommandeStatut, string> = {
     BROUILLON: "Brouillon",
-    EN_ATTENTE_STOCK: "En attente de stock",
-    EN_COURS_COMMANDE: "En cours de commande",
-    EN_COURS_FABRICATION: "En cours de fabrication",
+    EN_COURS_FABRICATION: "En cours",
     TERMINEE: "Terminée",
-    LIVREE: "Livrée",
     ANNULEE: "Annulée",
 }
 
 export function CommandeStatutSelector({
     commandeId,
     currentStatut,
-    isFeasible,
     disableEditing,
 }: {
     commandeId: string
     currentStatut: CommandeStatut
-    isFeasible?: boolean | null
     disableEditing?: boolean
 }) {
     const [isPending, startTransition] = useTransition()
@@ -43,13 +38,7 @@ export function CommandeStatutSelector({
         })
     }
 
-    // Disable if commande is not feasible (unless it's already ANNULEE or LIVREE)
-    const isDisabled =
-        disableEditing ||
-        isPending ||
-        (isFeasible === false &&
-            currentStatut !== CommandeStatut.ANNULEE &&
-            currentStatut !== CommandeStatut.LIVREE)
+    const isDisabled = disableEditing || isPending || currentStatut === CommandeStatut.TERMINEE
 
     return (
         <div className="space-y-1">

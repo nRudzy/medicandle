@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { CommandeForm } from "@/components/admin/commandes/commande-form"
-import { checkCommandeFeasibility } from "@/lib/business/commandes"
 
 export default async function EditCommandePage({
     params,
@@ -21,16 +20,6 @@ export default async function EditCommandePage({
         orderBy: { nom: "asc" },
     })
 
-    // Calculate feasibility
-    let isFeasible: boolean | null = null
-    try {
-        const feasibility = await checkCommandeFeasibility(id)
-        isFeasible = feasibility.isFeasible
-    } catch (error) {
-        console.error("Error checking feasibility:", error)
-        // Keep isFeasible as null if there's an error
-    }
-
     return (
         <div className="max-w-2xl space-y-6">
             <div>
@@ -40,7 +29,7 @@ export default async function EditCommandePage({
                 </p>
             </div>
 
-            <CommandeForm commande={commande} clients={clients} isFeasible={isFeasible} />
+            <CommandeForm commande={commande} clients={clients} />
         </div>
     )
 }

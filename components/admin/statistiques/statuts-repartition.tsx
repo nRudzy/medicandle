@@ -19,22 +19,16 @@ interface StatutsRepartitionProps {
 
 const statutLabels: Record<CommandeStatut, string> = {
     BROUILLON: "Brouillon",
-    EN_ATTENTE_STOCK: "En attente de stock",
-    EN_COURS_COMMANDE: "En cours de commande",
-    EN_COURS_FABRICATION: "En cours de fabrication",
+    EN_COURS_FABRICATION: "En cours",
     TERMINEE: "Terminée",
-    LIVREE: "Livrée",
     ANNULEE: "Annulée",
 }
 
 const COLORS = [
     "var(--medicandle-beige)",
-    "var(--medicandle-rose)",
     "var(--medicandle-sage)",
     "var(--medicandle-honey)",
-    "var(--medicandle-brown)",
-    "#C7DCC5",
-    "#E8C896",
+    "var(--medicandle-rose)",
 ]
 
 export function StatutsRepartition({ repartition }: StatutsRepartitionProps) {

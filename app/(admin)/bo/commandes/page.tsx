@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { CommandeStatut } from "@prisma/client"
-import { checkCommandeFeasibility } from "@/lib/business/commandes"
 
 export default async function CommandesPage({
     searchParams,
@@ -61,43 +60,8 @@ export default async function CommandesPage({
         orderBy: { createdAt: "desc" },
     })
 
-    // Calculate feasibility for each commande
-    const commandesWithFeasibility = await Promise.all(
-        commandes.map(async (commande) => {
-            // Only calculate if commande has lignes
-            if (commande.lignes.length === 0) {
-                return {
-                    ...commande,
-                    isFeasible: null, // No lignes = can't determine
-                }
-            }
-
-            try {
-                const feasibility = await checkCommandeFeasibility(commande.id)
-                return {
-                    ...commande,
-                    isFeasible: feasibility.isFeasible,
-                }
-            } catch (error) {
-                console.error(`Error checking feasibility for commande ${commande.id}:`, error)
-                return {
-                    ...commande,
-                    isFeasible: null,
-                }
-            }
-        })
-    )
-
-    // Filter by feasibility if requested
-    let filteredCommandes = commandesWithFeasibility
-    if (params.faisable === "true") {
-        filteredCommandes = commandesWithFeasibility.filter((c) => c.isFeasible === true)
-    } else if (params.faisable === "false") {
-        filteredCommandes = commandesWithFeasibility.filter((c) => c.isFeasible === false)
-    }
-
-    // Transform back to the format expected by the table (with lignes.quantite only)
-    const commandesForTable = filteredCommandes.map((commande) => ({
+    // Transform to the format expected by the table (with lignes.quantite only)
+    const commandesForTable = commandes.map((commande) => ({
         ...commande,
         lignes: commande.lignes.map((ligne) => ({
             quantite: ligne.quantite,
@@ -122,7 +86,7 @@ export default async function CommandesPage({
             </div>
 
             <CommandesFilters />
-            <CommandesTable commandes={commandesForTable} feasibilityMap={new Map(filteredCommandes.map(c => [c.id, c.isFeasible]))} />
+            <CommandesTable commandes={commandesForTable} />
         </div>
     )
 }
