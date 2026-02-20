@@ -18,8 +18,7 @@ export default async function BackOfficePage() {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-
-    // Fetch materials first to filter low stock
+    // Fetch all materials for calculations
     const allMaterials = await prisma.material.findMany({
         where: {
             stockPhysique: { not: null }
@@ -27,13 +26,7 @@ export default async function BackOfficePage() {
         orderBy: { stockPhysique: 'asc' }
     })
 
-    // Filter materials with low stock (below minimum or below 5 if no minimum)
-    const lowStockMaterials = allMaterials.filter(m => {
-        if (m.stockMinimal !== null) {
-            return (m.stockPhysique || 0) <= m.stockMinimal
-        }
-        return (m.stockPhysique || 0) < 5
-    }).slice(0, 5)
+
 
     // Fetch comprehensive stats
     const [
@@ -440,40 +433,7 @@ export default async function BackOfficePage() {
                 </Card>
             </div>
 
-            {/* Alerts */}
-            {lowStockMaterials.length > 0 && (
-                <Card className="border-amber-200 bg-amber-50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-amber-900">
-                            <AlertCircle className="h-5 w-5" />
-                            Alertes stock
-                        </CardTitle>
-                        <CardDescription className="text-amber-700">
-                            Matières premières avec stock faible
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2">
-                            {lowStockMaterials.map((material) => (
-                                <li key={material.id} className="text-sm text-amber-900">
-                                    <span className="font-medium">{material.name}</span>
-                                    {" — "}
-                                    <span className="text-amber-700">
-                                        Stock: {material.stockPhysique || 0} {material.unit.toLowerCase()}
-                                        {material.stockMinimal && ` (min: ${material.stockMinimal})`}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                        <Link
-                            href="/bo/matieres"
-                            className="text-xs text-amber-700 hover:underline mt-3 inline-block"
-                        >
-                            Gérer les matières premières →
-                        </Link>
-                    </CardContent>
-                </Card>
-            )}
+
 
             {/* Recent Commandes */}
             {recentCommandes.length > 0 && (

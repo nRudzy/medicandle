@@ -146,23 +146,19 @@ export function MaterialsTable({ materials }: { materials: Material[] }) {
                             <TableHead className="text-[var(--medicandle-dark-brown)]">Unité</TableHead>
                             <TableHead className="text-[var(--medicandle-dark-brown)]">Fournisseur</TableHead>
                             <TableHead className="text-[var(--medicandle-dark-brown)]">Stock physique</TableHead>
-                            <TableHead className="text-[var(--medicandle-dark-brown)]">Stock réservé</TableHead>
-                            <TableHead className="text-[var(--medicandle-dark-brown)]">Stock disponible</TableHead>
                             <TableHead className="text-right text-[var(--medicandle-dark-brown)]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {materials.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                                     Aucune matière première enregistrée
                                 </TableCell>
                             </TableRow>
                         ) : (
                             materials.map((material) => {
                                 const stockPhysique = material.stockPhysique ?? 0
-                                const stockReserve = material.stockReserve ?? 0
-                                const stockDisponible = stockPhysique - stockReserve
                                 const isSelected = selectedIds.has(material.id)
 
                                 // Constraint: only Allow same type according to requirements
@@ -199,12 +195,6 @@ export function MaterialsTable({ materials }: { materials: Material[] }) {
                                         <TableCell>{material.supplier || "—"}</TableCell>
                                         <TableCell>
                                             {stockPhysique.toFixed(2)} {unitLabels[material.unit]}
-                                        </TableCell>
-                                        <TableCell>
-                                            {stockReserve.toFixed(2)} {unitLabels[material.unit]}
-                                        </TableCell>
-                                        <TableCell className={stockDisponible < 0 ? "text-red-600 font-medium" : ""}>
-                                            {stockDisponible.toFixed(2)} {unitLabels[material.unit]}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">

@@ -4,28 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CommandeStatutSelector } from "@/components/admin/commandes/commande-statut-selector"
 import { CommandeLignesEditor } from "@/components/admin/commandes/commande-lignes-editor"
-import { generateBonDeCommandeMatieres } from "@/components/admin/actions"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft, Edit } from "lucide-react"
 
-async function GenerateBonDeCommandeButton({ commandeId }: { commandeId: string }) {
-    async function handleGenerate() {
-        "use server"
-        const result = await generateBonDeCommandeMatieres([commandeId])
-        if (result.bonId) {
-            redirect(`/bo/bons-de-commande/${result.bonId}`)
-        }
-    }
 
-    return (
-        <form action={handleGenerate}>
-            <Button type="submit">
-                Générer un bon de commande matières premières
-            </Button>
-        </form>
-    )
-}
 
 export default async function CommandeDetailPage({
     params,
@@ -189,21 +172,12 @@ export default async function CommandeDetailPage({
                                 lignes={commande.lignes}
                                 candles={candles}
                                 materials={materials}
+                                readonly={isCompleted}
                             />
                         </CardContent>
                     </Card>
 
-                    {!isCompleted && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Approvisionnement</CardTitle>
-                                <CardDescription>Générer un bon de commande pour les matières manquantes</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <GenerateBonDeCommandeButton commandeId={id} />
-                            </CardContent>
-                        </Card>
-                    )}
+
                 </TabsContent>
             </Tabs>
         </div>

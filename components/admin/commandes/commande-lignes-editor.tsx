@@ -35,12 +35,14 @@ export function CommandeLignesEditor({
     commandeId,
     lignes: initialLignes,
     candles,
-    materials
+    materials,
+    readonly = false
 }: {
     commandeId: string
     lignes: CommandeLigneWithBougie[]
     candles: Candle[]
     materials: Material[]
+    readonly?: boolean
 }) {
     const router = useRouter()
     const [lignes, setLignes] = useState(initialLignes)
@@ -254,26 +256,31 @@ export function CommandeLignesEditor({
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => handleEditClick(ligne)}
-                                                        className="h-8 w-8"
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {!readonly && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleEditClick(ligne)}
+                                                            className="h-8 w-8"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                     <CommandeLigneSupplementsDialog
                                                         ligne={ligne}
                                                         materials={materials}
+                                                        readonly={readonly}
                                                     />
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => handleDeleteLigne(ligne.id)}
-                                                        className="h-8 w-8 text-red-500 hover:text-red-600"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {!readonly && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleDeleteLigne(ligne.id)}
+                                                            className="h-8 w-8 text-red-500 hover:text-red-600"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                 </>
                                             )}
                                         </div>
@@ -357,7 +364,7 @@ export function CommandeLignesEditor({
                 </Table>
             </div>
 
-            {!isAdding && (
+            {!isAdding && !readonly && (
                 <Button variant="outline" onClick={() => setIsAdding(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Ajouter une ligne

@@ -51,10 +51,12 @@ type CommandeLigneWithSupplements = CommandeLigne & {
 
 export function CommandeLigneSupplementsDialog({
     ligne,
-    materials
+    materials,
+    readonly = false
 }: {
     ligne: CommandeLigneWithSupplements
     materials: Material[]
+    readonly?: boolean
 }) {
     const router = useRouter()
     const [open, setOpen] = useState(false)
@@ -177,24 +179,28 @@ export function CommandeLigneSupplementsDialog({
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => handleEditClick(supp)}
-                                                        disabled={isEditing && editingId !== supp.id}
-                                                    >
-                                                        <Edit2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-600"
-                                                        onClick={() => handleDelete(supp.id)}
-                                                        disabled={isEditing}
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                    {!readonly && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => handleEditClick(supp)}
+                                                            disabled={isEditing && editingId !== supp.id}
+                                                        >
+                                                            <Edit2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    )}
+                                                    {!readonly && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:text-red-600"
+                                                            onClick={() => handleDelete(supp.id)}
+                                                            disabled={isEditing}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -265,17 +271,19 @@ export function CommandeLigneSupplementsDialog({
                                 />
                             </div>
                         </div>
-                        <Button onClick={handleSubmit} disabled={!supplementForm.matierePremiereId}>
-                            {isEditing ? (
-                                <>
-                                    <Check className="w-4 h-4 mr-2" /> Mettre à jour
-                                </>
-                            ) : (
-                                <>
-                                    <Plus className="w-4 h-4 mr-2" /> Ajouter
-                                </>
-                            )}
-                        </Button>
+                        {!readonly && (
+                            <Button onClick={handleSubmit} disabled={!supplementForm.matierePremiereId}>
+                                {isEditing ? (
+                                    <>
+                                        <Check className="w-4 h-4 mr-2" /> Mettre à jour
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="w-4 h-4 mr-2" /> Ajouter
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </div>
                 </div>
                 <DialogFooter>

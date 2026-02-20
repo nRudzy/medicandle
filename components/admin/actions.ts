@@ -3,8 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { MaterialType, Unit, ClientType, CommandeStatut, BonDeCommandeMatieresStatut } from "@prisma/client"
-import { generateCommandeReference, generateBonDeCommandeMatieresReference } from "@/lib/utils/references"
+import { MaterialType, Unit, ClientType, CommandeStatut } from "@prisma/client"
+import { generateCommandeReference } from "@/lib/utils/references"
 import {
     reserveStockForCommande,
     releaseStockForCommande,
@@ -931,14 +931,21 @@ export async function changeCommandeStatut(
                 await releaseStockForCommande(commandeId)
             }
         } else if (nouveauStatut === CommandeStatut.EN_COURS_FABRICATION) {
-            // Reserve stock when moving from BROUILLON to EN_COURS_FABRICATION
+            // Reserve stock when moving to EN_COURS_FABRICATION
             if (ancienStatut === CommandeStatut.BROUILLON) {
+                await reserveStockForCommande(commandeId)
+            } else if (ancienStatut === CommandeStatut.ANNULEE) {
+                // If it was cancelled, we re-reserve
                 await reserveStockForCommande(commandeId)
             }
         } else if (nouveauStatut === CommandeStatut.TERMINEE) {
-            // Consume stock only when moving from EN_COURS_FABRICATION to TERMINEE
+            // Consume stock when moving to TERMINEE
             if (ancienStatut === CommandeStatut.EN_COURS_FABRICATION) {
-                await consumeStockForCommande(commandeId)
+                // Was reserved, so decrement reserve
+                await consumeStockForCommande(commandeId, { shouldDecrementReserve: true })
+            } else if (ancienStatut === CommandeStatut.BROUILLON || ancienStatut === CommandeStatut.ANNULEE) {
+                // Was not reserved, so don't decrement reserve
+                await consumeStockForCommande(commandeId, { shouldDecrementReserve: false })
             }
 
             // Create Revenue Transaction
@@ -971,332 +978,7 @@ export async function changeCommandeStatut(
     }
 }
 
-// ==================== BONS DE COMMANDE MATIERES ====================
 
-export async function createBonDeCommandeMatieresManuel(
-    prevState: { error?: string } | null,
-    formData: FormData
-): Promise<{ error?: string } | void> {
-    try {
-        const description = (formData.get("description") as string) || ""
-        const notes = (formData.get("notes") as string) || ""
-
-        const lignes: {
-            matierePremiereId: string
-            quantite: number
-            prix?: number | null
-            fournisseur?: string | null
-            notes?: string | null
-        }[] = []
-
-        let index = 0
-        while (formData.get(`lignes[${index}].matierePremiereId`)) {
-            const matierePremiereId = formData.get(`lignes[${index}].matierePremiereId`) as string
-            const quantiteStr = formData.get(`lignes[${index}].quantite`) as string
-            const prixStr = formData.get(`lignes[${index}].prix`) as string
-            const fournisseur = formData.get(`lignes[${index}].fournisseur`) as string
-            const ligneNote = formData.get(`lignes[${index}].notes`) as string
-
-            if (!matierePremiereId) {
-                return { error: `La matière première de la ligne ${index + 1} est requise` }
-            }
-
-            const quantite = parseFloat(quantiteStr)
-            if (isNaN(quantite) || quantite <= 0) {
-                return { error: `La quantité de la ligne ${index + 1} doit être un nombre positif` }
-            }
-
-            const prix = prixStr ? parseFloat(prixStr) : null
-            if (prixStr && (isNaN(prix!) || prix! < 0)) {
-                return { error: `Le prix unitaire de la ligne ${index + 1} doit être un nombre positif` }
-            }
-
-            lignes.push({
-                matierePremiereId,
-                quantite,
-                prix,
-                fournisseur: fournisseur?.trim() ? fournisseur : null,
-                notes: ligneNote?.trim() ? ligneNote : null,
-            })
-
-            index++
-        }
-
-        if (lignes.length === 0) {
-            return { error: "Ajoutez au moins une matière première" }
-        }
-
-        const reference = await generateBonDeCommandeMatieresReference()
-
-        const bon = await prisma.bonDeCommandeMatieres.create({
-            data: {
-                reference,
-                description: description.trim() ? description : null,
-                notes: notes.trim() ? notes : null,
-                statut: BonDeCommandeMatieresStatut.BROUILLON,
-                lignes: {
-                    create: lignes.map((ligne) => ({
-                        matierePremiereId: ligne.matierePremiereId,
-                        quantiteACommander: ligne.quantite,
-                        prixUnitaireAchat: ligne.prix,
-                        fournisseur: ligne.fournisseur,
-                        notes: ligne.notes,
-                    })),
-                },
-            },
-        })
-
-        revalidatePath("/bo/bons-de-commande")
-        redirect(`/bo/bons-de-commande/${bon.id}`)
-    } catch (error: any) {
-        if (isRedirectError(error)) {
-            throw error
-        }
-        console.error("Error creating manual bon de commande:", error)
-        return {
-            error: error?.message || "Une erreur s'est produite lors de la création du bon de commande. Veuillez réessayer.",
-        }
-    }
-}
-
-export async function generateBonDeCommandeMatieres(
-    commandeIds: string[]
-): Promise<{ error?: string; bonId?: string }> {
-    try {
-        if (commandeIds.length === 0) {
-            return { error: "Aucune commande sélectionnée" }
-        }
-
-        const reference = await generateBonDeCommandeMatieresReference()
-
-        // Calculate total materials needed for all commandes
-        const allMaterials = new Map<string, {
-            materialId: string
-            quantiteACommander: number
-            fournisseur?: string
-        }>()
-
-        for (const commandeId of commandeIds) {
-            const materials = await calculateMaterialsNeededForCommande(commandeId)
-
-            for (const material of materials) {
-                if (material.manque > 0) {
-                    const key = material.materialId
-                    if (allMaterials.has(key)) {
-                        const existing = allMaterials.get(key)!
-                        existing.quantiteACommander += material.manque
-                    } else {
-                        // Get material to find supplier
-                        const mat = await prisma.material.findUnique({
-                            where: { id: material.materialId },
-                        })
-
-                        allMaterials.set(key, {
-                            materialId: material.materialId,
-                            quantiteACommander: material.manque,
-                            fournisseur: mat?.supplier || undefined,
-                        })
-                    }
-                }
-            }
-        }
-
-        if (allMaterials.size === 0) {
-            return { error: "Aucune matière première manquante pour ces commandes" }
-        }
-
-        // Create bon de commande
-        const bon = await prisma.bonDeCommandeMatieres.create({
-            data: {
-                reference,
-                description: `Approvisionnement matières pour ${commandeIds.length} commande(s)`,
-                statut: BonDeCommandeMatieresStatut.BROUILLON,
-            },
-        })
-
-        // Create lignes
-        for (const [materialId, data] of allMaterials.entries()) {
-            await prisma.bonDeCommandeMatieresLigne.create({
-                data: {
-                    bonDeCommandeMatieresId: bon.id,
-                    matierePremiereId: materialId,
-                    quantiteACommander: data.quantiteACommander,
-                    fournisseur: data.fournisseur,
-                },
-            })
-        }
-
-        // Link to commandes
-        for (const commandeId of commandeIds) {
-            await prisma.bonDeCommandeMatieresCommande.create({
-                data: {
-                    bonDeCommandeMatieresId: bon.id,
-                    commandeId,
-                },
-            })
-        }
-
-        revalidatePath("/bo/bons-de-commande")
-        return { bonId: bon.id }
-    } catch (error: any) {
-        console.error("Error generating bon de commande matières:", error)
-        return {
-            error: error?.message || "Une erreur s'est produite lors de la génération du bon de commande. Veuillez réessayer.",
-        }
-    }
-}
-
-export async function updateBonDeCommandeMatieres(
-    id: string,
-    formData: FormData
-): Promise<{ error?: string } | void> {
-    try {
-        const description = formData.get("description") as string
-        const statut = formData.get("statut") as string
-        const notes = formData.get("notes") as string
-
-        await prisma.bonDeCommandeMatieres.update({
-            where: { id },
-            data: {
-                description: description || null,
-                statut: statut ? (statut as BonDeCommandeMatieresStatut) : null,
-                notes: notes || null,
-            },
-        })
-
-        revalidatePath("/bo/bons-de-commande")
-        revalidatePath(`/bo/bons-de-commande/${id}`)
-    } catch (error: any) {
-        console.error("Error updating bon de commande matières:", error)
-        return {
-            error: error?.message || "Une erreur s'est produite lors de la mise à jour du bon de commande. Veuillez réessayer.",
-        }
-    }
-}
-
-export async function changeBonDeCommandeStatut(
-    bonId: string,
-    nouveauStatut: BonDeCommandeMatieresStatut
-): Promise<{ error?: string } | void> {
-    try {
-        // Get the current bon de commande with its lignes to check previous status
-        const bonActuel = await prisma.bonDeCommandeMatieres.findUnique({
-            where: { id: bonId },
-            include: {
-                lignes: {
-                    include: {
-                        matierePremiere: {
-                            select: {
-                                id: true,
-                                stockPhysique: true,
-                                unit: true,
-                                costPerUnit: true,
-                            },
-                        },
-                    },
-                },
-            },
-        })
-
-        if (!bonActuel) {
-            return { error: "Bon de commande non trouvé" }
-        }
-
-        const ancienStatut = bonActuel.statut
-
-        // Update the statut
-        await prisma.bonDeCommandeMatieres.update({
-            where: { id: bonId },
-            data: {
-                statut: nouveauStatut,
-            },
-        })
-
-        // If moving to RECU_TOTAL, increment stock for all materials and create movements
-        if (nouveauStatut === BonDeCommandeMatieresStatut.RECU_TOTAL && ancienStatut !== BonDeCommandeMatieresStatut.RECU_TOTAL) {
-            let totalMontant = 0
-
-            // Increment stock for each ligne
-            for (const ligne of bonActuel.lignes) {
-                const quantite = (ligne as any).quantiteRecue || ligne.quantiteACommander
-                // Note: prixUnitaireAchat is on BonDeCommandeMatieresLigne (added in new schema)
-                // We need to cast or ensure types are updated. Using 'any' cast if TS complains temporarily or assume updated.
-                // Actually prisma generate ran, so types should be there.
-                // Assuming ligne includes prixUnitaireAchat.
-                // We need to fetch it? 'include' in finding bonActuel didn't include it explicitly but include all scalars usually. 
-                // But wait, the find query included 'lignes' with sub-include. Scalars are included by default.
-
-                const prix = (ligne as any).prixUnitaireAchat || ligne.matierePremiere.costPerUnit
-
-                await createStockMovement({
-                    matierePremiereId: ligne.matierePremiere.id,
-                    type: "RECEPTION_APPRO",
-                    quantiteDelta: quantite,
-                    unite: ligne.matierePremiere.unit,
-                    prixUnitaire: prix,
-                    sourceType: "BON_COMMANDE_MATIERES",
-                    sourceId: bonId
-                })
-
-                totalMontant += quantite * prix
-            }
-
-            // Create Expense Transaction
-            await createFinancialTransaction({
-                type: "DEPENSE_APPRO",
-                montant: -totalMontant, // Negative for expense
-                description: `Réception Bon ${bonActuel.reference}`,
-                categorie: "Matières Premières",
-                sourceType: "BON_COMMANDE_MATIERES",
-                sourceId: bonId
-            })
-
-        }
-        // If moving away from RECU_TOTAL (reverting), decrement stock
-        else if (ancienStatut === BonDeCommandeMatieresStatut.RECU_TOTAL && nouveauStatut !== BonDeCommandeMatieresStatut.RECU_TOTAL) {
-            // Revert movements? Ideally we should add correction movements.
-            // But simple revert: create correction movements with negative delta.
-
-            for (const ligne of bonActuel.lignes) {
-                const quantite = (ligne as any).quantiteRecue || ligne.quantiteACommander
-                const prix = (ligne as any).prixUnitaireAchat || ligne.matierePremiere.costPerUnit
-
-                await createStockMovement({
-                    matierePremiereId: ligne.matierePremiere.id,
-                    type: "CORRECTION",
-                    quantiteDelta: -quantite,
-                    unite: ligne.matierePremiere.unit,
-                    prixUnitaire: prix,
-                    sourceType: "BON_COMMANDE_MATIERES",
-                    sourceId: bonId,
-                    commentaire: "Annulation réception"
-                })
-            }
-
-            // No revert of FinancialTransaction? User said ledger is append-only.
-            // Maybe add a refund or adjustment transaction? 
-            // For simplicity in this iteration, I'll skip financial revert or add ADJUSTMENT.
-            await createFinancialTransaction({
-                type: "AJUSTEMENT",
-                montant: 0, // Need to calculate total again...
-                description: `Annulation Réception Bon ${bonActuel.reference} (TODO: Calculer montant)`,
-                categorie: "Correction",
-                sourceType: "BON_COMMANDE_MATIERES",
-                sourceId: bonId
-            })
-            // Actually, I'll skip financial adjustment for now to avoid complexity without recalculating loop.
-        }
-
-        revalidatePath("/bo/bons-de-commande")
-        revalidatePath(`/bo/bons-de-commande/${bonId}`)
-        revalidatePath("/bo/matieres") // Also revalidate materials page to show updated stock
-    } catch (error: any) {
-        console.error("Error changing bon de commande statut:", error)
-        return {
-            error: error?.message || "Une erreur s'est produite lors du changement de statut. Veuillez réessayer.",
-        }
-    }
-}
 
 // ==================== MATIERES SUPPLEMENTAIRES ====================
 

@@ -35,6 +35,21 @@ export async function POST(req: NextRequest) {
                 throw new Error("Certaines matières sources sont introuvables");
             }
 
+            const convertValue = (value: number, fromUnit: string, toUnit: string): number => {
+                if (fromUnit === toUnit) return value;
+
+                // Weight conversions
+                if (fromUnit === "G" && toUnit === "KG") return value / 1000;
+                if (fromUnit === "KG" && toUnit === "G") return value * 1000;
+
+                // Volume conversions
+                if (fromUnit === "ML" && toUnit === "L") return value / 1000;
+                if (fromUnit === "L" && toUnit === "ML") return value * 1000;
+
+                // If no conversion possible, we take the raw value as requested ("passer l'unité directement")
+                return value;
+            };
+
             // Validations
             for (const source of sources) {
                 if (source.type !== target.type) {
@@ -60,20 +75,34 @@ export async function POST(req: NextRequest) {
                         }
                     });
 
+                    // Resolve the units
+                    const scmUnit = scm.unit || source.unit;
+                    const targetMaterialUnit = target.unit;
+
                     if (existingTargetCm) {
-                        // Collision: merge quantiteUtilisee and delete the source one
+                        const targetCmUnit = existingTargetCm.unit || target.unit;
+
+                        // Convert source quantity to target CM unit
+                        const convertedScmQuantity = convertValue(scm.quantity, scmUnit, targetCmUnit);
+
+                        // Collision: merge quantity and delete the source one
                         await tx.candleMaterial.update({
                             where: { id: existingTargetCm.id },
                             data: {
-                                quantity: existingTargetCm.quantity + scm.quantity
+                                quantity: existingTargetCm.quantity + convertedScmQuantity
                             }
                         });
                         await tx.candleMaterial.delete({ where: { id: scm.id } });
                     } else {
                         // No collision: just re-assign
+                        // We also normalize the unit to the target material's unit to avoid future confusion
                         await tx.candleMaterial.update({
                             where: { id: scm.id },
-                            data: { materialId: targetId }
+                            data: {
+                                materialId: targetId,
+                                quantity: convertValue(scm.quantity, scmUnit, targetMaterialUnit),
+                                unit: targetMaterialUnit
+                            }
                         });
                     }
                 }
@@ -92,26 +121,28 @@ export async function POST(req: NextRequest) {
             });
 
             // 4. CommandeLigneMatiereSupplementaire
-            await tx.commandeLigneMatiereSupplementaire.updateMany({
-                where: { matierePremiereId: { in: sourceIds } },
-                data: { matierePremiereId: targetId }
-            });
+            for (const source of sources) {
+                const sourceSupplements = await tx.commandeLigneMatiereSupplementaire.findMany({
+                    where: { matierePremiereId: source.id }
+                });
+
+                for (const supp of sourceSupplements) {
+                    const suppUnit = supp.unite || source.unit;
+                    const targetMaterialUnit = target.unit;
+
+                    await tx.commandeLigneMatiereSupplementaire.update({
+                        where: { id: supp.id },
+                        data: {
+                            matierePremiereId: targetId,
+                            quantite: convertValue(supp.quantite, suppUnit, targetMaterialUnit),
+                            unite: targetMaterialUnit
+                        }
+                    });
+                }
+            }
 
             // Update Target (average price, sum stock)
-            const convertValue = (value: number, fromUnit: string, toUnit: string): number => {
-                if (fromUnit === toUnit) return value;
 
-                // Weight conversions
-                if (fromUnit === "G" && toUnit === "KG") return value / 1000;
-                if (fromUnit === "KG" && toUnit === "G") return value * 1000;
-
-                // Volume conversions
-                if (fromUnit === "ML" && toUnit === "L") return value / 1000;
-                if (fromUnit === "L" && toUnit === "ML") return value * 1000;
-
-                // If no conversion possible, we take the raw value as requested ("passer l'unité directement")
-                return value;
-            };
 
             const allMaterials = [target, ...sources];
 
